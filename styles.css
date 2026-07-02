@@ -453,3 +453,65 @@ button:hover {
 .file-actions button {
   width: auto;
 }
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(120px, 1fr));
+  gap: 8px;
+}
+
+.calendar-day-header {
+  font-weight: bold;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 8px;
+}
+
+.calendar-day {
+  min-height: 120px;
+  background: #0b1220;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px;
+  overflow: auto;
+}
+
+.empty-day {
+  opacity: 0.35;
+}
+
+.calendar-entry {
+  font-size: 12px;
+  padding: 6px;
+  border-radius: 6px;
+  margin-top: 6px;
+  cursor: pointer;
+  border: 1px solid var(--border);
+}
+
+.calendar-entry:hover {
+  border-color: var(--accent);
+}
+
+.calendar-vacation {
+  background: #854d0e;
+}
+
+.calendar-sick {
+  background: #7f1d1d;
+}
+
+.calendar-training {
+  background: #1e3a8a;
+}
+
+.calendar-court {
+  background: #064e3b;
+}
+
+.calendar-overtime {
+  background: #581c87;
+}
+
+.calendar-other {
+  background: #374151;
+}
