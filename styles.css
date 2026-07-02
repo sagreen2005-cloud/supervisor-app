@@ -436,3 +436,20 @@ button:hover {
   padding: 14px;
   margin-top: 10px;
 }
+.file-card {
+  background: var(--bg-card-light);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px;
+  margin-top: 14px;
+}
+
+.file-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.file-actions button {
+  width: auto;
+}
