@@ -319,3 +319,10 @@ button:hover {
 .expired-card {
   border-color: #991b1b;
 }
+.schedule-card {
+  background: var(--bg-card-light);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px;
+  margin-top: 14px;
+}
