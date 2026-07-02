@@ -326,3 +326,10 @@ button:hover {
   padding: 18px;
   margin-top: 14px;
 }
+.warning-card {
+  border-color: #ca8a04;
+}
+
+.danger-stat {
+  border-color: #991b1b;
+}
