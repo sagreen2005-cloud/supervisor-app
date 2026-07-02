@@ -24,6 +24,10 @@ function showPage(page) {
       loadPerformancePage();
       break;
 
+    case "evaluations":
+      loadEvaluationsPage();
+      break;
+
     case "files":
       loadFilesPage();
       break;
