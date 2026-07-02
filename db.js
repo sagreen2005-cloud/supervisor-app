@@ -69,3 +69,14 @@ function updateRecord(storeName, record) {
     request.onerror = () => reject(request.error);
   });
 }
+
+function clearStore(storeName) {
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction([storeName], "readwrite");
+    const store = transaction.objectStore(storeName);
+    const request = store.clear();
+
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error);
+  });
+}
