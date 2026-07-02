@@ -515,3 +515,78 @@ button:hover {
 .calendar-other {
   background: #374151;
 }
+#calendarGrid {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.calendar-grid {
+  display: grid !important;
+  grid-template-columns: repeat(7, 1fr) !important;
+  gap: 8px;
+  width: 100%;
+  min-width: 900px;
+}
+
+.calendar-day-header {
+  font-weight: bold;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 10px;
+  background: #0b1220;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.calendar-day {
+  min-height: 125px;
+  background: #0b1220;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px;
+  overflow-y: auto;
+}
+
+.empty-day {
+  background: transparent;
+  border: none;
+}
+
+.calendar-entry {
+  display: block;
+  font-size: 12px;
+  padding: 6px;
+  border-radius: 6px;
+  margin-top: 6px;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  color: white;
+}
+
+.calendar-entry:hover {
+  border-color: var(--accent);
+}
+
+.calendar-vacation {
+  background: #854d0e;
+}
+
+.calendar-sick {
+  background: #7f1d1d;
+}
+
+.calendar-training {
+  background: #1e3a8a;
+}
+
+.calendar-court {
+  background: #064e3b;
+}
+
+.calendar-overtime {
+  background: #581c87;
+}
+
+.calendar-other {
+  background: #374151;
+}
