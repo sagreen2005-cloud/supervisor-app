@@ -164,3 +164,83 @@ button:hover {
   font-size: 14px;
   margin-top: 6px;
 }
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.page-header h2 {
+  margin: 0;
+  font-size: 32px;
+}
+
+.page-header p,
+.muted {
+  color: var(--text-muted);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px;
+}
+
+.employee-card {
+  background: var(--bg-card-light);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px;
+  margin-top: 14px;
+}
+
+.employee-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: start;
+}
+
+.employee-top h3 {
+  margin: 0;
+}
+
+.employee-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.employee-details div {
+  background: #0b1220;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.employee-details span {
+  display: block;
+  color: var(--text-muted);
+  font-size: 13px;
+  margin-bottom: 5px;
+}
+
+.employee-note {
+  margin-top: 16px;
+  padding: 12px;
+  background: #0b1220;
+  border-left: 4px solid var(--accent);
+  border-radius: 8px;
+}
+
+.danger-btn {
+  background: #991b1b;
+  width: auto;
+  white-space: nowrap;
+}
+
+.danger-btn:hover {
+  background: #7f1d1d;
+}
