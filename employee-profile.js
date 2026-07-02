@@ -4,6 +4,11 @@ async function openEmployeeProfile(id) {
   const employees = await getAllRecords("employees");
   const employee = employees.find(e => e.id === id);
 
+  if (!employee.equipment) employee.equipment = [];
+  if (!employee.activity) employee.activity = [];
+
+  await updateRecord("employees", employee);
+
   document.getElementById("content").innerHTML = `
     <button onclick="loadEmployeesPage()">← Back to Employees</button>
 
