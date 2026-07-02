@@ -276,3 +276,21 @@ button:hover {
 .timeline-item p {
   margin-bottom: 0;
 }
+.profile-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.profile-tabs button {
+  width: auto;
+  background: #0b1220;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+.profile-tabs button:hover {
+  background: var(--accent);
+  color: white;
+}
