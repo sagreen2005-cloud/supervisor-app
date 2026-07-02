@@ -24,6 +24,10 @@ function showPage(page) {
       loadPerformancePage();
       break;
 
+    case "files":
+      loadFilesPage();
+      break;
+
     case "settings":
       loadSettingsPage();
       break;
