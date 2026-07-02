@@ -12,6 +12,10 @@ function showPage(page) {
       loadReportReviewsPage();
       break;
 
+    case "performance":
+      loadPerformancePage();
+      break;
+
     case "settings":
       loadSettingsPage();
       break;
