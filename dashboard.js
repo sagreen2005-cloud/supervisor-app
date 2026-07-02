@@ -1,28 +1,78 @@
 async function loadDashboard() {
   const employees = await getAllRecords("employees");
 
-  let totalNotes = 0;
-  let totalEquipment = 0;
-  let totalTraining = 0;
-  let totalSchedule = 0;
-  let expiredTraining = 0;
-  let trainingExpiringSoon = 0;
+  const todayString = new Date().toISOString().slice(0, 10);
+
+  let workingToday = [];
+  let vacationToday = [];
+  let sickToday = [];
+  let courtToday = [];
+  let trainingToday = [];
+  let openTasks = [];
+  let trainingAlerts = [];
   let recentActivity = [];
 
-  const today = new Date();
-  const thirtyDaysFromNow = new Date();
-  thirtyDaysFromNow.setDate(today.getDate() + 30);
-
   employees.forEach(employee => {
-    const activity = employee.activity || [];
-    const equipment = employee.equipment || [];
-    const training = employee.training || [];
     const schedule = employee.schedule || [];
+    const training = employee.training || [];
+    const activity = employee.activity || [];
+    const tasks = employee.tasks || [];
 
-    totalNotes += activity.length;
-    totalEquipment += equipment.length;
-    totalTraining += training.length;
-    totalSchedule += schedule.length;
+    let isUnavailable = false;
+
+    schedule.forEach(item => {
+      const start = item.startDate;
+      const end = item.endDate || item.startDate;
+
+      if (start && todayString >= start && todayString <= end) {
+        if (item.type === "Vacation") {
+          vacationToday.push(employee);
+          isUnavailable = true;
+        }
+
+        if (item.type === "Sick Leave") {
+          sickToday.push(employee);
+          isUnavailable = true;
+        }
+
+        if (item.type === "Court") {
+          courtToday.push(employee);
+        }
+
+        if (item.type === "Training") {
+          trainingToday.push(employee);
+          isUnavailable = true;
+        }
+      }
+    });
+
+    if (!isUnavailable) {
+      workingToday.push(employee);
+    }
+
+    training.forEach(item => {
+      if (!item.expiresDate) return;
+
+      const today = new Date();
+      const expires = new Date(item.expiresDate);
+      const daysAway = Math.ceil((expires - today) / (1000 * 60 * 60 * 24));
+
+      if (daysAway < 0) {
+        trainingAlerts.push({
+          employee,
+          item,
+          status: "Expired",
+          daysAway
+        });
+      } else if (daysAway <= 30) {
+        trainingAlerts.push({
+          employee,
+          item,
+          status: "Due Soon",
+          daysAway
+        });
+      }
+    });
 
     activity.forEach(item => {
       recentActivity.push({
@@ -34,28 +84,34 @@ async function loadDashboard() {
       });
     });
 
-    training.forEach(item => {
-      if (!item.expiresDate) return;
-
-      const expires = new Date(item.expiresDate);
-
-      if (expires < today) {
-        expiredTraining++;
-      } else if (expires <= thirtyDaysFromNow) {
-        trainingExpiringSoon++;
+    tasks.forEach((task, index) => {
+      if (!task.completed) {
+        openTasks.push({
+          ...task,
+          storageEmployeeId: employee.id,
+          index
+        });
       }
     });
   });
 
   recentActivity = recentActivity
     .sort((a, b) => new Date(b.date) - new Date(a.date))
-    .slice(0, 8);
+    .slice(0, 6);
+
+  openTasks = openTasks
+    .sort((a, b) => {
+      if (!a.dueDate) return 1;
+      if (!b.dueDate) return -1;
+      return new Date(a.dueDate) - new Date(b.dueDate);
+    })
+    .slice(0, 6);
 
   document.getElementById("content").innerHTML = `
     <div class="page-header">
       <div>
-        <h2>Dashboard</h2>
-        <p>Supervisor overview, quick actions, upcoming concerns, and recent employee activity.</p>
+        <h2>Smart Dashboard</h2>
+        <p>Today’s staffing, alerts, tasks, and recent supervisor activity.</p>
       </div>
     </div>
 
@@ -72,56 +128,116 @@ async function loadDashboard() {
 
     <div class="dashboard-grid">
       <div class="stat-card">
-        <div class="number">${employees.length}</div>
-        <div class="label">Employees</div>
-      </div>
-
-      <div class="stat-card">
-        <div class="number">${totalNotes}</div>
-        <div class="label">Timeline Notes</div>
-      </div>
-
-      <div class="stat-card">
-        <div class="number">${totalEquipment}</div>
-        <div class="label">Equipment Items</div>
-      </div>
-
-      <div class="stat-card">
-        <div class="number">${totalTraining}</div>
-        <div class="label">Training Records</div>
-      </div>
-
-      <div class="stat-card">
-        <div class="number">${totalSchedule}</div>
-        <div class="label">Schedule Entries</div>
+        <div class="number">${workingToday.length}</div>
+        <div class="label">Working Today</div>
       </div>
 
       <div class="stat-card warning-card">
-        <div class="number">${trainingExpiringSoon}</div>
-        <div class="label">Training Expiring Soon</div>
+        <div class="number">${vacationToday.length}</div>
+        <div class="label">Vacation Today</div>
       </div>
 
       <div class="stat-card danger-stat">
-        <div class="number">${expiredTraining}</div>
-        <div class="label">Expired Training</div>
+        <div class="number">${sickToday.length}</div>
+        <div class="label">Sick Today</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="number">${courtToday.length}</div>
+        <div class="label">Court Today</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="number">${trainingToday.length}</div>
+        <div class="label">Training Today</div>
+      </div>
+
+      <div class="stat-card warning-card">
+        <div class="number">${trainingAlerts.length}</div>
+        <div class="label">Training Alerts</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="number">${openTasks.length}</div>
+        <div class="label">Open Tasks</div>
       </div>
     </div>
 
     <section class="card">
+      <h3>Working Today</h3>
+      ${renderEmployeeMiniList(workingToday)}
+    </section>
+
+    <section class="card">
+      <h3>Vacation / Sick / Court / Training</h3>
+      <h4>Vacation</h4>
+      ${renderEmployeeMiniList(vacationToday)}
+
+      <h4>Sick Leave</h4>
+      ${renderEmployeeMiniList(sickToday)}
+
+      <h4>Court</h4>
+      ${renderEmployeeMiniList(courtToday)}
+
+      <h4>Training</h4>
+      ${renderEmployeeMiniList(trainingToday)}
+    </section>
+
+    <section class="card">
+      <h3>Needs Attention</h3>
+      ${
+        trainingAlerts.length === 0
+          ? `<p class="muted">No training alerts.</p>`
+          : trainingAlerts.map(alert => `
+            <div class="alert-card ${alert.status === "Expired" ? "critical-task" : "high-task"}">
+              <strong>${alert.employee.rank || ""} ${alert.employee.firstName} ${alert.employee.lastName}</strong>
+              <p>${alert.item.name} — ${alert.status}${alert.daysAway >= 0 ? ` in ${alert.daysAway} days` : ""}</p>
+            </div>
+          `).join("")
+      }
+    </section>
+
+    <section class="card">
+      <h3>Open Tasks</h3>
+      ${
+        openTasks.length === 0
+          ? `<p class="muted">No open tasks.</p>`
+          : openTasks.map(task => `
+            <div class="task-card">
+              <strong>${task.title}</strong>
+              <p class="muted">${task.category} | Due: ${task.dueDate || "No due date"}</p>
+              ${task.notes ? `<p>${task.notes}</p>` : ""}
+            </div>
+          `).join("")
+      }
+    </section>
+
+    <section class="card">
       <h3>Recent Activity</h3>
-      <div id="recentActivityList">
-        ${
-          recentActivity.length === 0
-            ? `<p class="muted">No recent activity yet.</p>`
-            : recentActivity.map(item => `
-              <div class="timeline-item" onclick="openEmployeeProfile(${item.employeeId})">
-                <strong>${item.employeeName || "Unknown Employee"} — ${item.type || "Activity"}</strong>
-                <span>${item.date ? new Date(item.date).toLocaleString() : "No date"}</span>
-                <p>${item.note || ""}</p>
-              </div>
-            `).join("")
-        }
-      </div>
+      ${
+        recentActivity.length === 0
+          ? `<p class="muted">No recent activity yet.</p>`
+          : recentActivity.map(item => `
+            <div class="timeline-item" onclick="openEmployeeProfile(${item.employeeId})">
+              <strong>${item.employeeName} — ${item.type}</strong>
+              <span>${item.date ? new Date(item.date).toLocaleString() : "No date"}</span>
+              <p>${item.note || ""}</p>
+            </div>
+          `).join("")
+      }
     </section>
   `;
+}
+
+function renderEmployeeMiniList(list) {
+  if (!list || list.length === 0) {
+    return `<p class="muted">None.</p>`;
+  }
+
+  return list.map(employee => `
+    <div class="mini-employee" onclick="openEmployeeProfile(${employee.id})">
+      ${employee.rank || ""} ${employee.firstName} ${employee.lastName}
+      <span>${employee.assignment || ""}</span>
+    </div>
+  `).join("");
 }
