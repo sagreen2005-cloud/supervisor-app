@@ -1,27 +1,51 @@
-.mini-employee {
-  background: #0b1220;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 12px;
-  margin: 8px 0;
-  cursor: pointer;
-}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Supervisor Management System</title>
+  <link rel="stylesheet" href="styles.css?v=12" />
+</head>
+<body>
+  <header>
+    <h1>Supervisor Management System</h1>
+    <p>Local-only employee tracking system</p>
+  </header>
 
-.mini-employee:hover {
-  border-color: var(--accent);
-}
+  <div id="container">
+    <nav>
+      <button onclick="showPage('dashboard')">📊 Dashboard</button>
+      <button onclick="showPage('dailyLog')">📝 Daily Log</button>
+      <button onclick="showPage('employees')">👮 Employees</button>
+      <button onclick="showPage('tasks')">✅ Tasks</button>
+      <button onclick="showPage('reportReviews')">📄 Report Reviews</button>
+      <button onclick="showPage('performance')">⭐ Performance</button>
+      <button onclick="showPage('files')">📁 Files</button>
+      <button onclick="showPage('calendar')">📅 Calendar</button>
+      <button onclick="showPage('equipment')">🔧 Equipment</button>
+      <button onclick="showPage('settings')">⚙️ Settings</button>
+    </nav>
 
-.mini-employee span {
-  display: block;
-  color: var(--text-muted);
-  font-size: 13px;
-  margin-top: 4px;
-}
+    <main id="content"></main>
+  </div>
 
-.alert-card {
-  background: var(--bg-card-light);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 14px;
-  margin-top: 10px;
-}
+  <script src="db.js?v=12"></script>
+  <script src="dashboard.js?v=12"></script>
+  <script src="quick-actions.js?v=12"></script>
+
+  <script src="employees-list.js?v=12"></script>
+  <script src="employee-profile.js?v=12"></script>
+  <script src="employee-notes.js?v=12"></script>
+  <script src="employee-equipment.js?v=12"></script>
+  <script src="employee-training.js?v=12"></script>
+  <script src="employee-schedule.js?v=12"></script>
+  <script src="report-reviews.js?v=12"></script>
+  <script src="performance.js?v=12"></script>
+  <script src="daily-log.js?v=12"></script>
+  <script src="tasks.js?v=12"></script>
+  <script src="files.js?v=12"></script>
+
+  <script src="settings.js?v=12"></script>
+  <script src="navigation.js?v=12"></script>
+  <script src="app.js?v=12"></script>
+</body>
+</html>
