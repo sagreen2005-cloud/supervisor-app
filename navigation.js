@@ -8,6 +8,10 @@ function showPage(page) {
       loadEmployeesPage();
       break;
 
+    case "reportReviews":
+      loadReportReviewsPage();
+      break;
+
     case "settings":
       loadSettingsPage();
       break;
