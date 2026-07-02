@@ -12,6 +12,10 @@ function showPage(page) {
       loadEmployeesPage();
       break;
 
+    case "tasks":
+      loadTasksPage();
+      break;
+
     case "reportReviews":
       loadReportReviewsPage();
       break;
