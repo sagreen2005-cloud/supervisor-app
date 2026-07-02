@@ -26,6 +26,7 @@ async function loadDashboard() {
 
     activity.forEach(item => {
       recentActivity.push({
+        employeeId: employee.id,
         employeeName: `${employee.firstName || ""} ${employee.lastName || ""}`.trim(),
         type: item.type,
         note: item.note,
@@ -54,9 +55,20 @@ async function loadDashboard() {
     <div class="page-header">
       <div>
         <h2>Dashboard</h2>
-        <p>Supervisor overview, upcoming concerns, and recent employee activity.</p>
+        <p>Supervisor overview, quick actions, upcoming concerns, and recent employee activity.</p>
       </div>
     </div>
+
+    <section class="card">
+      <h3>Quick Actions</h3>
+      <div class="quick-actions">
+        <button onclick="loadEmployeesPage()">+ Employee</button>
+        <button onclick="loadQuickNote()">+ Quick Note</button>
+        <button onclick="loadReportReviewsPage()">+ Report Review</button>
+        <button onclick="loadQuickSchedule()">+ Schedule</button>
+        <button onclick="loadQuickTraining()">+ Training</button>
+      </div>
+    </section>
 
     <div class="dashboard-grid">
       <div class="stat-card">
@@ -102,7 +114,7 @@ async function loadDashboard() {
           recentActivity.length === 0
             ? `<p class="muted">No recent activity yet.</p>`
             : recentActivity.map(item => `
-              <div class="timeline-item">
+              <div class="timeline-item" onclick="openEmployeeProfile(${item.employeeId})">
                 <strong>${item.employeeName || "Unknown Employee"} — ${item.type || "Activity"}</strong>
                 <span>${item.date ? new Date(item.date).toLocaleString() : "No date"}</span>
                 <p>${item.note || ""}</p>
