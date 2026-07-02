@@ -28,6 +28,10 @@ function showPage(page) {
       loadFilesPage();
       break;
 
+    case "calendar":
+      loadCalendarPage();
+      break;
+
     case "settings":
       loadSettingsPage();
       break;
