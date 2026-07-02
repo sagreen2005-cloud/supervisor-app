@@ -1,3 +1,5 @@
+let selectedEmployeeId = null;
+
 async function loadEmployeesPage() {
   document.getElementById("content").innerHTML = `
     <div class="page-header">
@@ -28,7 +30,7 @@ async function loadEmployeesPage() {
 
     <section class="card">
       <h3>Employee Directory</h3>
-      <input id="searchBox" placeholder="Search by name, badge, rank, phone, email, or assignment..." />
+      <input id="searchBox" placeholder="Search employees..." />
       <div id="employeeList"></div>
     </section>
   `;
@@ -50,6 +52,7 @@ async function saveEmployee() {
     assignment: document.getElementById("assignment").value.trim(),
     hireDate: document.getElementById("hireDate").value,
     notes: document.getElementById("employeeNotes").value.trim(),
+    activity: [],
     createdAt: new Date().toISOString()
   };
 
@@ -67,8 +70,6 @@ async function loadEmployees() {
   const search = document.getElementById("searchBox")?.value.toLowerCase() || "";
   const list = document.getElementById("employeeList");
 
-  if (!list) return;
-
   list.innerHTML = "";
 
   const filtered = employees.filter(employee => {
@@ -84,6 +85,7 @@ async function loadEmployees() {
   filtered.forEach(employee => {
     const div = document.createElement("div");
     div.className = "employee-card";
+    div.onclick = () => openEmployeeProfile(employee.id);
 
     div.innerHTML = `
       <div class="employee-top">
@@ -91,7 +93,7 @@ async function loadEmployees() {
           <h3>${employee.rank || ""} ${employee.firstName} ${employee.lastName}</h3>
           <p class="muted">Badge: ${employee.badge || "N/A"} | Assignment: ${employee.assignment || "N/A"}</p>
         </div>
-        <button class="danger-btn" onclick="removeEmployee(${employee.id})">Delete</button>
+        <button class="danger-btn" onclick="event.stopPropagation(); removeEmployee(${employee.id})">Delete</button>
       </div>
 
       <div class="employee-details">
@@ -99,12 +101,104 @@ async function loadEmployees() {
         <div><span>Email</span>${employee.email || "N/A"}</div>
         <div><span>Hire Date</span>${employee.hireDate || "N/A"}</div>
       </div>
-
-      ${employee.notes ? `<p class="employee-note">${employee.notes}</p>` : ""}
     `;
 
     list.appendChild(div);
   });
+}
+
+async function openEmployeeProfile(id) {
+  selectedEmployeeId = id;
+  const employees = await getAllRecords("employees");
+  const employee = employees.find(e => e.id === id);
+
+  document.getElementById("content").innerHTML = `
+    <button onclick="loadEmployeesPage()">← Back to Employees</button>
+
+    <section class="card">
+      <h2>${employee.rank || ""} ${employee.firstName} ${employee.lastName}</h2>
+      <p class="muted">Badge: ${employee.badge || "N/A"} | ${employee.assignment || "No assignment listed"}</p>
+
+      <div class="employee-details">
+        <div><span>Phone</span>${employee.phone || "N/A"}</div>
+        <div><span>Email</span>${employee.email || "N/A"}</div>
+        <div><span>Hire Date</span>${employee.hireDate || "N/A"}</div>
+      </div>
+
+      <p class="employee-note">${employee.notes || "No general notes entered."}</p>
+    </section>
+
+    <section class="card">
+      <h3>Add Supervisor Note</h3>
+
+      <select id="activityType">
+        <option value="Good Job">Good Job</option>
+        <option value="Commendation">Commendation</option>
+        <option value="Report Issue">Report Issue</option>
+        <option value="Counseling">Counseling</option>
+        <option value="Discipline">Discipline</option>
+        <option value="Training">Training</option>
+        <option value="Equipment">Equipment</option>
+        <option value="General Note">General Note</option>
+      </select>
+
+      <textarea id="activityNote" placeholder="Document the issue, observation, correction, or positive performance..."></textarea>
+
+      <button onclick="addEmployeeActivity()">Add Note</button>
+    </section>
+
+    <section class="card">
+      <h3>Employee Timeline</h3>
+      <div id="activityTimeline"></div>
+    </section>
+  `;
+
+  loadEmployeeTimeline(employee);
+}
+
+async function addEmployeeActivity() {
+  const employees = await getAllRecords("employees");
+  const employee = employees.find(e => e.id === selectedEmployeeId);
+
+  const activity = {
+    type: document.getElementById("activityType").value,
+    note: document.getElementById("activityNote").value.trim(),
+    date: new Date().toISOString()
+  };
+
+  if (!activity.note) {
+    alert("Enter a note first.");
+    return;
+  }
+
+  if (!employee.activity) employee.activity = [];
+
+  employee.activity.push(activity);
+
+  await updateRecord("employees", employee);
+  await openEmployeeProfile(employee.id);
+}
+
+function loadEmployeeTimeline(employee) {
+  const timeline = document.getElementById("activityTimeline");
+  const activity = employee.activity || [];
+
+  if (activity.length === 0) {
+    timeline.innerHTML = `<p class="muted">No timeline entries yet.</p>`;
+    return;
+  }
+
+  timeline.innerHTML = activity
+    .slice()
+    .reverse()
+    .map(item => `
+      <div class="timeline-item">
+        <strong>${item.type}</strong>
+        <span>${new Date(item.date).toLocaleString()}</span>
+        <p>${item.note}</p>
+      </div>
+    `)
+    .join("");
 }
 
 async function removeEmployee(id) {
