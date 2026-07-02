@@ -28,6 +28,7 @@ async function openEmployeeProfile(id) {
         <button onclick="showEmployeeTab('equipment')">Equipment</button>
         <button onclick="showEmployeeTab('training')">Training</button>
         <button onclick="showEmployeeTab('schedule')">Schedule</button>
+        <button onclick="showEmployeeTab('files')">Files</button>
       </div>
     </section>
 
@@ -42,16 +43,14 @@ async function showEmployeeTab(tab) {
   const employee = employees.find(e => e.id === selectedEmployeeId);
   const container = document.getElementById("employeeTabContent");
 
-  if (tab === "overview") {
-    loadEmployee360(employee);
-  }
-
+  if (tab === "overview") loadEmployee360(employee);
   if (tab === "edit") loadEditEmployeeTab(employee);
   if (tab === "timeline") loadTimelineTab(employee);
   if (tab === "notes") loadAddNoteTab();
   if (tab === "equipment") loadEquipmentTab(employee);
   if (tab === "training") loadTrainingTab(employee);
   if (tab === "schedule") loadScheduleTab(employee);
+  if (tab === "files") loadEmployeeFilesTab(employee);
 }
 
 function loadEmployee360(employee) {
