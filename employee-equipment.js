@@ -1,5 +1,5 @@
 function loadEquipmentTab(employee) {
-  const equipment = employee.equipment || [];
+  if (!employee.equipment) employee.equipment = [];
 
   document.getElementById("employeeTabContent").innerHTML = `
     <section class="card">
@@ -23,7 +23,7 @@ function loadEquipmentTab(employee) {
     </section>
   `;
 
-  renderEquipmentList(equipment);
+  renderEquipmentList(employee.equipment);
 }
 
 function renderEquipmentList(equipment) {
@@ -48,7 +48,7 @@ function renderEquipmentList(equipment) {
         <div class="employee-details">
           <div><span>Issued</span>${item.issuedDate || "N/A"}</div>
           <div><span>Inspection / Due</span>${item.dueDate || "N/A"}</div>
-          <div><span>Added</span>${new Date(item.createdAt).toLocaleDateString()}</div>
+          <div><span>Added</span>${item.createdAt ? new Date(item.createdAt).toLocaleDateString() : "N/A"}</div>
         </div>
 
         ${item.notes ? `<p class="employee-note">${item.notes}</p>` : ""}
@@ -60,6 +60,9 @@ function renderEquipmentList(equipment) {
 async function addEquipmentItem() {
   const employees = await getAllRecords("employees");
   const employee = employees.find(e => e.id === selectedEmployeeId);
+
+  if (!employee.equipment) employee.equipment = [];
+  if (!employee.activity) employee.activity = [];
 
   const item = {
     name: document.getElementById("equipmentName").value.trim(),
@@ -75,9 +78,6 @@ async function addEquipmentItem() {
     return;
   }
 
-  if (!employee.equipment) employee.equipment = [];
-  if (!employee.activity) employee.activity = [];
-
   employee.equipment.push(item);
 
   employee.activity.push({
@@ -89,7 +89,7 @@ async function addEquipmentItem() {
   employee.updatedAt = new Date().toISOString();
 
   await updateRecord("employees", employee);
-  showEmployeeTab("equipment");
+  await showEmployeeTab("equipment");
 }
 
 async function removeEquipmentItem(index) {
@@ -98,10 +98,12 @@ async function removeEquipmentItem(index) {
   const employees = await getAllRecords("employees");
   const employee = employees.find(e => e.id === selectedEmployeeId);
 
-  const removed = employee.equipment[index];
-  employee.equipment.splice(index, 1);
-
+  if (!employee.equipment) employee.equipment = [];
   if (!employee.activity) employee.activity = [];
+
+  const removed = employee.equipment[index];
+
+  employee.equipment.splice(index, 1);
 
   employee.activity.push({
     type: "Equipment",
@@ -112,5 +114,5 @@ async function removeEquipmentItem(index) {
   employee.updatedAt = new Date().toISOString();
 
   await updateRecord("employees", employee);
-  showEmployeeTab("equipment");
+  await showEmployeeTab("equipment");
 }
