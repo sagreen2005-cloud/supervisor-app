@@ -1,69 +1,38 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8" />
   <title>Supervisor App</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <h1>Supervisor App</h1>
+  <header>
+    <h1>Supervisor App</h1>
+    <p>Local-only employee tracking system</p>
+  </header>
 
-  <input id="name" placeholder="Employee Name">
-  <input id="phone" placeholder="Phone Number">
-  <button onclick="saveEmployee()">Save Employee</button>
+  <main>
+    <section class="card">
+      <h2>Add Employee</h2>
 
-  <h2>Employees</h2>
-  <ul id="employeeList"></ul>
+      <input id="firstName" placeholder="First Name" />
+      <input id="lastName" placeholder="Last Name" />
+      <input id="badge" placeholder="Badge Number" />
+      <input id="phone" placeholder="Phone Number" />
+      <input id="email" placeholder="Email" />
+      <input id="assignment" placeholder="Assignment / Shift" />
 
-  <script>
-    let db;
+      <button id="saveEmployeeBtn">Save Employee</button>
+    </section>
 
-    const request = indexedDB.open("SupervisorAppDB", 1);
+    <section class="card">
+      <h2>Employees</h2>
+      <input id="searchBox" placeholder="Search employees..." />
+      <div id="employeeList"></div>
+    </section>
+  </main>
 
-    request.onupgradeneeded = function(event) {
-      db = event.target.result;
-      db.createObjectStore("employees", { keyPath: "id", autoIncrement: true });
-    };
-
-    request.onsuccess = function(event) {
-      db = event.target.result;
-      loadEmployees();
-    };
-
-    function saveEmployee() {
-      const employee = {
-        name: document.getElementById("name").value,
-        phone: document.getElementById("phone").value,
-        createdAt: new Date().toISOString()
-      };
-
-      const transaction = db.transaction(["employees"], "readwrite");
-      const store = transaction.objectStore("employees");
-      store.add(employee);
-
-      transaction.oncomplete = function() {
-        document.getElementById("name").value = "";
-        document.getElementById("phone").value = "";
-        loadEmployees();
-      };
-    }
-
-    function loadEmployees() {
-      const list = document.getElementById("employeeList");
-      list.innerHTML = "";
-
-      const transaction = db.transaction(["employees"], "readonly");
-      const store = transaction.objectStore("employees");
-
-      store.openCursor().onsuccess = function(event) {
-        const cursor = event.target.result;
-
-        if (cursor) {
-          const li = document.createElement("li");
-          li.textContent = cursor.value.name + " - " + cursor.value.phone;
-          list.appendChild(li);
-          cursor.continue();
-        }
-      };
-    }
-  </script>
+  <script src="db.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
