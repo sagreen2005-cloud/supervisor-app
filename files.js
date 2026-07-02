@@ -140,6 +140,29 @@ async function renderFiles() {
   const search = document.getElementById("fileSearchBox")?.value.toLowerCase() || "";
   const list = document.getElementById("fileList");
 
+  const files = getAllStoredFiles(employees)
+    .filter(file => {
+      const text = `
+        ${file.title}
+        ${file.category}
+        ${file.fileName}
+        ${file.employeeName}
+        ${file.notes}
+      `.toLowerCase();
+
+      return text.includes(search);
+    })
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  if (files.length === 0) {
+    list.innerHTML = `<p class="muted">No files found.</p>`;
+    return;
+  }
+
+  list.innerHTML = files.map(file => renderFileCard(file)).join("");
+}
+
+function getAllStoredFiles(employees) {
   let files = [];
 
   employees.forEach(storageEmployee => {
@@ -159,26 +182,11 @@ async function renderFiles() {
     });
   });
 
-  files = files
-    .filter(file => {
-      const text = `
-        ${file.title}
-        ${file.category}
-        ${file.fileName}
-        ${file.employeeName}
-        ${file.notes}
-      `.toLowerCase();
+  return files;
+}
 
-      return text.includes(search);
-    })
-    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
-  if (files.length === 0) {
-    list.innerHTML = `<p class="muted">No files found.</p>`;
-    return;
-  }
-
-  list.innerHTML = files.map(file => `
+function renderFileCard(file) {
+  return `
     <div class="file-card">
       <div class="employee-top">
         <div>
@@ -200,7 +208,26 @@ async function renderFiles() {
 
       ${file.notes ? `<p class="employee-note">${file.notes}</p>` : ""}
     </div>
-  `).join("");
+  `;
+}
+
+async function loadEmployeeFilesTab(employee) {
+  const employees = await getAllRecords("employees");
+  const files = getAllStoredFiles(employees)
+    .filter(file => file.employeeId === employee.id)
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  document.getElementById("employeeTabContent").innerHTML = `
+    <section class="card">
+      <h3>Employee Files</h3>
+      <p class="muted">Files attached to this employee.</p>
+      ${
+        files.length === 0
+          ? `<p class="muted">No files attached to this employee.</p>`
+          : files.map(file => renderFileCard(file)).join("")
+      }
+    </section>
+  `;
 }
 
 async function openStoredFile(storageEmployeeId, fileIndex) {
@@ -229,6 +256,16 @@ async function removeStoredFile(storageEmployeeId, fileIndex) {
   storageEmployee.updatedAt = new Date().toISOString();
 
   await updateRecord("employees", storageEmployee);
+
+  if (selectedEmployeeId) {
+    const employee = employees.find(e => e.id === selectedEmployeeId);
+
+    if (employee && document.getElementById("employeeTabContent")) {
+      await loadEmployeeFilesTab(employee);
+      return;
+    }
+  }
+
   await renderFiles();
 }
 
