@@ -5,7 +5,7 @@ async function loadEmployeesPage() {
     <div class="page-header">
       <div>
         <h2>Employees</h2>
-        <p>Employee profiles, contact information, assignments, and quick reference details.</p>
+        <p>Employee profiles, contact information, assignments, and supervisor documentation.</p>
       </div>
     </div>
 
@@ -70,6 +70,8 @@ async function loadEmployees() {
   const search = document.getElementById("searchBox")?.value.toLowerCase() || "";
   const list = document.getElementById("employeeList");
 
+  if (!list) return;
+
   list.innerHTML = "";
 
   const filtered = employees.filter(employee => {
@@ -109,6 +111,7 @@ async function loadEmployees() {
 
 async function openEmployeeProfile(id) {
   selectedEmployeeId = id;
+
   const employees = await getAllRecords("employees");
   const employee = employees.find(e => e.id === id);
 
@@ -119,41 +122,104 @@ async function openEmployeeProfile(id) {
       <h2>${employee.rank || ""} ${employee.firstName} ${employee.lastName}</h2>
       <p class="muted">Badge: ${employee.badge || "N/A"} | ${employee.assignment || "No assignment listed"}</p>
 
-      <div class="employee-details">
-        <div><span>Phone</span>${employee.phone || "N/A"}</div>
-        <div><span>Email</span>${employee.email || "N/A"}</div>
-        <div><span>Hire Date</span>${employee.hireDate || "N/A"}</div>
+      <div class="profile-tabs">
+        <button onclick="showEmployeeTab('overview')">Overview</button>
+        <button onclick="showEmployeeTab('timeline')">Timeline</button>
+        <button onclick="showEmployeeTab('notes')">Add Note</button>
+        <button onclick="showEmployeeTab('equipment')">Equipment</button>
+        <button onclick="showEmployeeTab('training')">Training</button>
+        <button onclick="showEmployeeTab('schedule')">Schedule</button>
       </div>
-
-      <p class="employee-note">${employee.notes || "No general notes entered."}</p>
     </section>
 
-    <section class="card">
-      <h3>Add Supervisor Note</h3>
-
-      <select id="activityType">
-        <option value="Good Job">Good Job</option>
-        <option value="Commendation">Commendation</option>
-        <option value="Report Issue">Report Issue</option>
-        <option value="Counseling">Counseling</option>
-        <option value="Discipline">Discipline</option>
-        <option value="Training">Training</option>
-        <option value="Equipment">Equipment</option>
-        <option value="General Note">General Note</option>
-      </select>
-
-      <textarea id="activityNote" placeholder="Document the issue, observation, correction, or positive performance..."></textarea>
-
-      <button onclick="addEmployeeActivity()">Add Note</button>
-    </section>
-
-    <section class="card">
-      <h3>Employee Timeline</h3>
-      <div id="activityTimeline"></div>
-    </section>
+    <div id="employeeTabContent"></div>
   `;
 
-  loadEmployeeTimeline(employee);
+  showEmployeeTab("overview");
+}
+
+async function showEmployeeTab(tab) {
+  const employees = await getAllRecords("employees");
+  const employee = employees.find(e => e.id === selectedEmployeeId);
+  const container = document.getElementById("employeeTabContent");
+
+  if (tab === "overview") {
+    container.innerHTML = `
+      <section class="card">
+        <h3>Overview</h3>
+
+        <div class="employee-details">
+          <div><span>Phone</span>${employee.phone || "N/A"}</div>
+          <div><span>Email</span>${employee.email || "N/A"}</div>
+          <div><span>Hire Date</span>${employee.hireDate || "N/A"}</div>
+          <div><span>Assignment</span>${employee.assignment || "N/A"}</div>
+        </div>
+
+        <p class="employee-note">${employee.notes || "No general notes entered."}</p>
+      </section>
+    `;
+  }
+
+  if (tab === "timeline") {
+    container.innerHTML = `
+      <section class="card">
+        <h3>Employee Timeline</h3>
+        <div id="activityTimeline"></div>
+      </section>
+    `;
+
+    loadEmployeeTimeline(employee);
+  }
+
+  if (tab === "notes") {
+    container.innerHTML = `
+      <section class="card">
+        <h3>Add Supervisor Note</h3>
+
+        <select id="activityType">
+          <option value="Good Job">Good Job</option>
+          <option value="Commendation">Commendation</option>
+          <option value="Report Issue">Report Issue</option>
+          <option value="Counseling">Counseling</option>
+          <option value="Discipline">Discipline</option>
+          <option value="Training">Training</option>
+          <option value="Equipment">Equipment</option>
+          <option value="General Note">General Note</option>
+        </select>
+
+        <textarea id="activityNote" placeholder="Document the issue, observation, correction, or positive performance..."></textarea>
+
+        <button onclick="addEmployeeActivity()">Add Note</button>
+      </section>
+    `;
+  }
+
+  if (tab === "equipment") {
+    container.innerHTML = `
+      <section class="card">
+        <h3>Equipment</h3>
+        <p class="muted">Equipment tracking will be added next.</p>
+      </section>
+    `;
+  }
+
+  if (tab === "training") {
+    container.innerHTML = `
+      <section class="card">
+        <h3>Training / Certifications</h3>
+        <p class="muted">Training and certification tracking will be added later.</p>
+      </section>
+    `;
+  }
+
+  if (tab === "schedule") {
+    container.innerHTML = `
+      <section class="card">
+        <h3>Schedule / Days Off</h3>
+        <p class="muted">Schedule and days-off tracking will be added later.</p>
+      </section>
+    `;
+  }
 }
 
 async function addEmployeeActivity() {
@@ -177,6 +243,7 @@ async function addEmployeeActivity() {
 
   await updateRecord("employees", employee);
   await openEmployeeProfile(employee.id);
+  showEmployeeTab("timeline");
 }
 
 function loadEmployeeTimeline(employee) {
