@@ -1,24 +1,23 @@
-function showPage(page){
+function showPage(page) {
+  switch (page) {
+    case "dashboard":
+      loadDashboard();
+      break;
 
-switch(page){
+    case "employees":
+      loadEmployeesPage();
+      break;
 
-case "dashboard":
+    case "settings":
+      loadSettingsPage();
+      break;
 
-loadDashboard();
-
-break;
-
-case "employees":
-
-loadEmployeesPage();
-
-break;
-
-default:
-
-document.getElementById("content").innerHTML=
-"<h2>Coming Soon</h2>";
-
-}
-
+    default:
+      document.getElementById("content").innerHTML = `
+        <section class="card">
+          <h2>Coming Soon</h2>
+          <p class="muted">This section will be built later.</p>
+        </section>
+      `;
+  }
 }
