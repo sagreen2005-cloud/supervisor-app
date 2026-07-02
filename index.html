@@ -6,33 +6,50 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <header>
-    <h1>Supervisor App</h1>
-    <p>Local-only employee tracking system</p>
-  </header>
+<header>
+    <h1>Supervisor Management System</h1>
+</header>
 
-  <main>
-    <section class="card">
-      <h2>Add Employee</h2>
+<div id="container">
 
-      <input id="firstName" placeholder="First Name" />
-      <input id="lastName" placeholder="Last Name" />
-      <input id="badge" placeholder="Badge Number" />
-      <input id="phone" placeholder="Phone Number" />
-      <input id="email" placeholder="Email" />
-      <input id="assignment" placeholder="Assignment / Shift" />
+    <nav>
 
-      <button id="saveEmployeeBtn">Save Employee</button>
-    </section>
+        <button onclick="showPage('dashboard')">
+            Dashboard
+        </button>
 
-    <section class="card">
-      <h2>Employees</h2>
-      <input id="searchBox" placeholder="Search employees..." />
-      <div id="employeeList"></div>
-    </section>
-  </main>
+        <button onclick="showPage('employees')">
+            Employees
+        </button>
 
-  <script src="db.js"></script>
-  <script src="app.js"></script>
+        <button onclick="showPage('calendar')">
+            Calendar
+        </button>
+
+        <button onclick="showPage('performance')">
+            Performance
+        </button>
+
+        <button onclick="showPage('equipment')">
+            Equipment
+        </button>
+
+        <button onclick="showPage('settings')">
+            Settings
+        </button>
+
+    </nav>
+
+    <main id="content">
+
+    </main>
+
+</div>
+
+<script src="db.js"></script>
+<script src="dashboard.js"></script>
+<script src="employees.js"></script>
+<script src="navigation.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
