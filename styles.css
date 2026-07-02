@@ -385,3 +385,27 @@ button:hover {
   padding: 18px;
   margin-top: 14px;
 }
+.task-card,
+.search-result-card {
+  background: var(--bg-card-light);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px;
+  margin-top: 14px;
+}
+
+.search-result-card {
+  cursor: pointer;
+}
+
+.search-result-card:hover {
+  border-color: var(--accent);
+}
+
+.high-task {
+  border-color: #ca8a04;
+}
+
+.critical-task {
+  border-color: #991b1b;
+}
