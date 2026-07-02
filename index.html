@@ -2,49 +2,74 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Supervisor Management System</title>
-  <link rel="stylesheet" href="./styles.css?v=17" />
+  <title>Supervisor Command Center</title>
+  <link rel="stylesheet" href="./styles.css?v=19" />
 </head>
 <body>
-  <header>
-    <h1>Supervisor Management System</h1>
-    <p>Local-only employee tracking system</p>
+  <header class="app-header">
+    <div>
+      <h1>Supervisor Command Center</h1>
+      <p>Local-only personnel, supervision, and shift management</p>
+    </div>
   </header>
 
   <div id="container">
-    <nav>
-      <button onclick="showPage('dashboard')">📊 Dashboard</button>
-      <button onclick="showPage('dailyLog')">📝 Daily Log</button>
-      <button onclick="showPage('employees')">👮 Employees</button>
-      <button onclick="showPage('tasks')">✅ Tasks</button>
-      <button onclick="showPage('reportReviews')">📄 Report Reviews</button>
-      <button onclick="showPage('performance')">⭐ Performance</button>
-      <button onclick="showPage('evaluations')">📋 Evaluations</button>
-      <button onclick="showPage('files')">📁 Files</button>
-      <button onclick="showPage('calendar')">📅 Calendar</button>
-      <button onclick="showPage('settings')">⚙️ Settings</button>
+    <nav class="sidebar">
+      <div class="nav-section">
+        <div class="nav-label">Home</div>
+        <button onclick="showPage('dashboard')">🏠 Dashboard</button>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-label">Personnel</div>
+        <button onclick="showPage('employees')">👮 Employees</button>
+        <button onclick="showPage('evaluations')">📋 Evaluations</button>
+        <button onclick="showPage('performance')">⭐ Performance</button>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-label">Supervision</div>
+        <button onclick="showPage('dailyLog')">📝 Daily Log</button>
+        <button onclick="showPage('tasks')">✅ Tasks</button>
+        <button onclick="showPage('reportReviews')">📄 Report Reviews</button>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-label">Scheduling</div>
+        <button onclick="showPage('calendar')">📅 Calendar</button>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-label">Documents</div>
+        <button onclick="showPage('files')">📁 Files</button>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-label">System</div>
+        <button onclick="showPage('settings')">⚙️ Settings</button>
+      </div>
     </nav>
 
     <main id="content"></main>
   </div>
 
-  <script src="./db.js?v=17"></script>
-  <script src="./dashboard.js?v=17"></script>
-  <script src="./quick-actions.js?v=17"></script>
-  <script src="./employees-list.js?v=17"></script>
-  <script src="./employee-profile.js?v=17"></script>
-  <script src="./employee-notes.js?v=17"></script>
-  <script src="./employee-training.js?v=17"></script>
-  <script src="./employee-schedule.js?v=17"></script>
-  <script src="./report-reviews.js?v=17"></script>
-  <script src="./performance.js?v=17"></script>
-  <script src="./evaluations.js?v=17"></script>
-  <script src="./daily-log.js?v=17"></script>
-  <script src="./tasks.js?v=17"></script>
-  <script src="./files.js?v=17"></script>
-  <script src="./calendar.js?v=17"></script>
-  <script src="./settings.js?v=17"></script>
-  <script src="./navigation.js?v=17"></script>
-  <script src="./app.js?v=17"></script>
+  <script src="./db.js?v=19"></script>
+  <script src="./dashboard.js?v=19"></script>
+  <script src="./quick-actions.js?v=19"></script>
+  <script src="./employees-list.js?v=19"></script>
+  <script src="./employee-profile.js?v=19"></script>
+  <script src="./employee-notes.js?v=19"></script>
+  <script src="./employee-training.js?v=19"></script>
+  <script src="./employee-schedule.js?v=19"></script>
+  <script src="./report-reviews.js?v=19"></script>
+  <script src="./performance.js?v=19"></script>
+  <script src="./evaluations.js?v=19"></script>
+  <script src="./daily-log.js?v=19"></script>
+  <script src="./tasks.js?v=19"></script>
+  <script src="./files.js?v=19"></script>
+  <script src="./calendar.js?v=19"></script>
+  <script src="./settings.js?v=19"></script>
+  <script src="./navigation.js?v=19"></script>
+  <script src="./app.js?v=19"></script>
 </body>
 </html>
