@@ -333,3 +333,31 @@ button:hover {
 .danger-stat {
   border-color: #991b1b;
 }
+.checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 10px;
+  margin: 12px 0 18px;
+}
+
+.checkbox-grid label {
+  background: #0b1220;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  color: var(--text-muted);
+}
+
+.checkbox-grid input {
+  width: auto;
+  display: inline;
+  margin-right: 8px;
+}
+
+.review-card {
+  background: var(--bg-card-light);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px;
+  margin-top: 14px;
+}
