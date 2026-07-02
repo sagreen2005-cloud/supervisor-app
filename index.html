@@ -2,54 +2,33 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Supervisor App</title>
+  <title>Supervisor Management System</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-<header>
+  <header>
     <h1>Supervisor Management System</h1>
-</header>
+    <p>Local-only employee tracking system</p>
+  </header>
 
-<div id="container">
-
+  <div id="container">
     <nav>
-
-        <button onclick="showPage('dashboard')">
-            Dashboard
-        </button>
-
-        <button onclick="showPage('employees')">
-            Employees
-        </button>
-
-        <button onclick="showPage('calendar')">
-            Calendar
-        </button>
-
-        <button onclick="showPage('performance')">
-            Performance
-        </button>
-
-        <button onclick="showPage('equipment')">
-            Equipment
-        </button>
-
-        <button onclick="showPage('settings')">
-            Settings
-        </button>
-
+      <button onclick="showPage('dashboard')">📊 Dashboard</button>
+      <button onclick="showPage('employees')">👮 Employees</button>
+      <button onclick="showPage('calendar')">📅 Calendar</button>
+      <button onclick="showPage('performance')">⭐ Performance</button>
+      <button onclick="showPage('equipment')">🔧 Equipment</button>
+      <button onclick="showPage('settings')">⚙️ Settings</button>
     </nav>
 
-    <main id="content">
+    <main id="content"></main>
+  </div>
 
-    </main>
-
-</div>
-
-<script src="db.js"></script>
-<script src="dashboard.js"></script>
-<script src="employees.js"></script>
-<script src="navigation.js"></script>
-<script src="app.js"></script>
+  <script src="db.js"></script>
+  <script src="dashboard.js"></script>
+  <script src="employees.js"></script>
+  <script src="settings.js"></script>
+  <script src="navigation.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
