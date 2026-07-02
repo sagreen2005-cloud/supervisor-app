@@ -1,201 +1,222 @@
-async function loadCalendarPage() {
+async function loadDashboard() {
   const employees = await getAllRecords("employees");
+  const todayString = new Date().toISOString().slice(0, 10);
 
-  const today = new Date();
-  const currentMonth = today.toISOString().slice(0, 7);
-
-  document.getElementById("content").innerHTML = `
-    <div class="page-header">
-      <div>
-        <h2>Calendar</h2>
-        <p>View PTO, sick leave, court, training, overtime, and other schedule entries.</p>
-      </div>
-    </div>
-
-    <section class="card">
-      <h3>Calendar Filter</h3>
-
-      <div class="form-grid">
-        <input id="calendarMonth" type="month" value="${currentMonth}" />
-
-        <select id="calendarTypeFilter">
-          <option value="All">All Types</option>
-          <option value="Vacation">Vacation</option>
-          <option value="Sick Leave">Sick Leave</option>
-          <option value="Training">Training</option>
-          <option value="Court">Court</option>
-          <option value="Comp Time">Comp Time</option>
-          <option value="Regular Day Off">Regular Day Off</option>
-          <option value="Holiday">Holiday</option>
-          <option value="Overtime">Overtime</option>
-          <option value="Other">Other</option>
-        </select>
-
-        <input id="calendarSearch" placeholder="Search employee, type, or notes..." />
-      </div>
-    </section>
-
-    <section class="card">
-      <h3>Monthly Schedule</h3>
-      <div id="calendarGrid"></div>
-    </section>
-
-    <section class="card">
-      <h3>Schedule List</h3>
-      <div id="calendarList"></div>
-    </section>
-  `;
-
-  document.getElementById("calendarMonth").addEventListener("change", renderCalendar);
-  document.getElementById("calendarTypeFilter").addEventListener("change", renderCalendar);
-  document.getElementById("calendarSearch").addEventListener("input", renderCalendar);
-
-  await renderCalendar();
-}
-
-async function renderCalendar() {
-  const employees = await getAllRecords("employees");
-  const monthValue = document.getElementById("calendarMonth").value;
-  const typeFilter = document.getElementById("calendarTypeFilter").value;
-  const search = document.getElementById("calendarSearch").value.toLowerCase();
-
-  const year = Number(monthValue.split("-")[0]);
-  const month = Number(monthValue.split("-")[1]) - 1;
-
-  const firstDay = new Date(year, month, 1);
-  const lastDay = new Date(year, month + 1, 0);
-  const daysInMonth = lastDay.getDate();
-
-  let entries = [];
+  let workingToday = [];
+  let vacationToday = [];
+  let sickToday = [];
+  let courtToday = [];
+  let trainingToday = [];
+  let openTasks = [];
+  let alerts = [];
+  let recentActivity = [];
 
   employees.forEach(employee => {
-    const employeeName = `${employee.rank || ""} ${employee.firstName || ""} ${employee.lastName || ""}`.trim();
+    const schedule = employee.schedule || [];
+    const training = employee.training || [];
+    const activity = employee.activity || [];
+    const tasks = employee.tasks || [];
 
-    (employee.schedule || []).forEach((item, index) => {
+    let unavailable = false;
+
+    schedule.forEach(item => {
       const start = item.startDate;
       const end = item.endDate || item.startDate;
 
-      if (!start) return;
+      if (start && todayString >= start && todayString <= end) {
+        if (item.type === "Vacation") {
+          vacationToday.push(employee);
+          unavailable = true;
+        }
 
-      const text = `${employeeName} ${item.type} ${item.notes}`.toLowerCase();
+        if (item.type === "Sick Leave") {
+          sickToday.push(employee);
+          unavailable = true;
+        }
 
-      const matchesType = typeFilter === "All" || item.type === typeFilter;
-      const matchesSearch = text.includes(search);
+        if (item.type === "Court") courtToday.push(employee);
 
-      if (!matchesType || !matchesSearch) return;
-
-      const entryStart = new Date(start + "T00:00:00");
-      const entryEnd = new Date(end + "T00:00:00");
-
-      for (let d = new Date(entryStart); d <= entryEnd; d.setDate(d.getDate() + 1)) {
-        if (d.getFullYear() === year && d.getMonth() === month) {
-          entries.push({
-            employeeId: employee.id,
-            employeeName,
-            type: item.type,
-            date: d.toISOString().slice(0, 10),
-            startDate: start,
-            endDate: end,
-            hours: item.hours,
-            notes: item.notes,
-            index
-          });
+        if (item.type === "Training") {
+          trainingToday.push(employee);
+          unavailable = true;
         }
       }
     });
+
+    if (!unavailable) workingToday.push(employee);
+
+    training.forEach(item => {
+      if (!item.expiresDate) return;
+
+      const today = new Date();
+      const expires = new Date(item.expiresDate);
+      const daysAway = Math.ceil((expires - today) / (1000 * 60 * 60 * 24));
+
+      if (daysAway < 0 || daysAway <= 30) {
+        alerts.push({
+          name: `${employee.rank || ""} ${employee.firstName} ${employee.lastName}`.trim(),
+          text: `${item.name} ${daysAway < 0 ? "expired" : "expires in " + daysAway + " days"}`,
+          critical: daysAway < 0
+        });
+      }
+    });
+
+    tasks.forEach(task => {
+      if (!task.completed) {
+        openTasks.push({
+          title: task.title,
+          dueDate: task.dueDate,
+          priority: task.priority,
+          category: task.category
+        });
+      }
+    });
+
+    activity.forEach(item => {
+      recentActivity.push({
+        employeeId: employee.id,
+        name: `${employee.firstName || ""} ${employee.lastName || ""}`.trim(),
+        type: item.type,
+        note: item.note,
+        date: item.date
+      });
+    });
   });
 
-  renderCalendarGrid(year, month, daysInMonth, entries);
-  renderCalendarList(entries);
+  openTasks = openTasks
+    .sort((a, b) => {
+      if (!a.dueDate) return 1;
+      if (!b.dueDate) return -1;
+      return new Date(a.dueDate) - new Date(b.dueDate);
+    })
+    .slice(0, 5);
+
+  recentActivity = recentActivity
+    .sort((a, b) => new Date(b.date) - new Date(a.date))
+    .slice(0, 5);
+
+  alerts = alerts.slice(0, 5);
+
+  document.getElementById("content").innerHTML = `
+    <div class="compact-dashboard-header">
+      <div>
+        <h2>Supervisor Dashboard</h2>
+        <p>${new Date().toLocaleDateString()} | Roll-call overview</p>
+      </div>
+
+      <div class="quick-actions compact-actions">
+        <button onclick="loadQuickNote()">+ Note</button>
+        <button onclick="loadQuickSchedule()">+ Schedule</button>
+        <button onclick="loadReportReviewsPage()">+ Report</button>
+        <button onclick="loadTasksPage()">+ Task</button>
+      </div>
+    </div>
+
+    <section class="staffing-strip">
+      <div>
+        <strong>${workingToday.length}</strong>
+        <span>Working</span>
+      </div>
+
+      <div>
+        <strong>${vacationToday.length}</strong>
+        <span>Vacation</span>
+      </div>
+
+      <div>
+        <strong>${sickToday.length}</strong>
+        <span>Sick</span>
+      </div>
+
+      <div>
+        <strong>${courtToday.length}</strong>
+        <span>Court</span>
+      </div>
+
+      <div>
+        <strong>${trainingToday.length}</strong>
+        <span>Training</span>
+      </div>
+
+      <div>
+        <strong>${alerts.length}</strong>
+        <span>Alerts</span>
+      </div>
+
+      <div>
+        <strong>${openTasks.length}</strong>
+        <span>Tasks</span>
+      </div>
+    </section>
+
+    <div class="dashboard-two-column">
+      <section class="card compact-card">
+        <h3>Out / Court / Training Today</h3>
+        ${renderCompactGroup("Vacation", vacationToday)}
+        ${renderCompactGroup("Sick", sickToday)}
+        ${renderCompactGroup("Court", courtToday)}
+        ${renderCompactGroup("Training", trainingToday)}
+      </section>
+
+      <section class="card compact-card">
+        <h3>Needs Attention</h3>
+        ${
+          alerts.length === 0
+            ? `<p class="muted">No alerts.</p>`
+            : alerts.map(alert => `
+              <div class="compact-alert ${alert.critical ? "critical-text" : ""}">
+                <strong>${alert.name}</strong>
+                <span>${alert.text}</span>
+              </div>
+            `).join("")
+        }
+      </section>
+
+      <section class="card compact-card">
+        <h3>Open Tasks</h3>
+        ${
+          openTasks.length === 0
+            ? `<p class="muted">No open tasks.</p>`
+            : openTasks.map(task => `
+              <div class="compact-line">
+                <strong>${task.title}</strong>
+                <span>${task.dueDate || "No due date"} | ${task.priority || "Normal"}</span>
+              </div>
+            `).join("")
+        }
+      </section>
+
+      <section class="card compact-card">
+        <h3>Recent Activity</h3>
+        ${
+          recentActivity.length === 0
+            ? `<p class="muted">No recent activity.</p>`
+            : recentActivity.map(item => `
+              <div class="compact-line clickable" onclick="openEmployeeProfile(${item.employeeId})">
+                <strong>${item.name} — ${item.type}</strong>
+                <span>${item.note || ""}</span>
+              </div>
+            `).join("")
+        }
+      </section>
+    </div>
+  `;
 }
 
-function renderCalendarGrid(year, month, daysInMonth, entries) {
-  const grid = document.getElementById("calendarGrid");
-
-  let html = `
-    <div class="calendar-grid">
-      <div class="calendar-day-header">Sun</div>
-      <div class="calendar-day-header">Mon</div>
-      <div class="calendar-day-header">Tue</div>
-      <div class="calendar-day-header">Wed</div>
-      <div class="calendar-day-header">Thu</div>
-      <div class="calendar-day-header">Fri</div>
-      <div class="calendar-day-header">Sat</div>
-  `;
-
-  const firstDayOfWeek = new Date(year, month, 1).getDay();
-
-  for (let i = 0; i < firstDayOfWeek; i++) {
-    html += `<div class="calendar-day empty-day"></div>`;
-  }
-
-  for (let day = 1; day <= daysInMonth; day++) {
-    const dateString = new Date(year, month, day).toISOString().slice(0, 10);
-    const dayEntries = entries.filter(e => e.date === dateString);
-
-    html += `
-      <div class="calendar-day">
-        <strong>${day}</strong>
-        ${
-          dayEntries.map(entry => `
-            <div class="calendar-entry ${getCalendarTypeClass(entry.type)}" onclick="openEmployeeProfile(${entry.employeeId})">
-              ${entry.employeeName} - ${entry.type}
-            </div>
-          `).join("")
-        }
+function renderCompactGroup(title, list) {
+  if (!list || list.length === 0) {
+    return `
+      <div class="compact-group">
+        <strong>${title}</strong>
+        <span class="muted">None</span>
       </div>
     `;
   }
 
-  html += `</div>`;
-  grid.innerHTML = html;
-}
-
-function renderCalendarList(entries) {
-  const list = document.getElementById("calendarList");
-
-  const uniqueEntries = [];
-
-  entries.forEach(entry => {
-    const key = `${entry.employeeId}-${entry.index}`;
-    if (!uniqueEntries.some(e => `${e.employeeId}-${e.index}` === key)) {
-      uniqueEntries.push(entry);
-    }
-  });
-
-  if (uniqueEntries.length === 0) {
-    list.innerHTML = `<p class="muted">No schedule entries found for this month.</p>`;
-    return;
-  }
-
-  list.innerHTML = uniqueEntries
-    .sort((a, b) => new Date(a.startDate) - new Date(b.startDate))
-    .map(entry => `
-      <div class="schedule-card" onclick="openEmployeeProfile(${entry.employeeId})">
-        <div class="employee-top">
-          <div>
-            <h3>${entry.employeeName}</h3>
-            <p class="muted">${entry.type} | ${entry.startDate} to ${entry.endDate || entry.startDate}</p>
-          </div>
-        </div>
-
-        <div class="employee-details">
-          <div><span>Type</span>${entry.type}</div>
-          <div><span>Hours</span>${entry.hours || "N/A"}</div>
-          <div><span>Date</span>${entry.startDate}</div>
-        </div>
-
-        ${entry.notes ? `<p class="employee-note">${entry.notes}</p>` : ""}
-      </div>
-    `)
-    .join("");
-}
-
-function getCalendarTypeClass(type) {
-  if (type === "Vacation") return "calendar-vacation";
-  if (type === "Sick Leave") return "calendar-sick";
-  if (type === "Training") return "calendar-training";
-  if (type === "Court") return "calendar-court";
-  if (type === "Overtime") return "calendar-overtime";
-  return "calendar-other";
+  return `
+    <div class="compact-group">
+      <strong>${title}</strong>
+      <span>${list.map(e => `${e.rank || ""} ${e.firstName} ${e.lastName}`.trim()).join(", ")}</span>
+    </div>
+  `;
 }
