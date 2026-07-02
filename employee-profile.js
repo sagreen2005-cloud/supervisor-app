@@ -6,6 +6,7 @@ async function openEmployeeProfile(id) {
 
   if (!employee.equipment) employee.equipment = [];
   if (!employee.training) employee.training = [];
+  if (!employee.schedule) employee.schedule = [];
   if (!employee.activity) employee.activity = [];
 
   await updateRecord("employees", employee);
@@ -56,34 +57,12 @@ async function showEmployeeTab(tab) {
     `;
   }
 
-  if (tab === "edit") {
-    loadEditEmployeeTab(employee);
-  }
-
-  if (tab === "timeline") {
-    loadTimelineTab(employee);
-  }
-
-  if (tab === "notes") {
-    loadAddNoteTab();
-  }
-
-  if (tab === "equipment") {
-    loadEquipmentTab(employee);
-  }
-
-  if (tab === "training") {
-    loadTrainingTab(employee);
-  }
-
-  if (tab === "schedule") {
-    container.innerHTML = `
-      <section class="card">
-        <h3>Schedule / Days Off</h3>
-        <p class="muted">Schedule and days-off tracking will be added later.</p>
-      </section>
-    `;
-  }
+  if (tab === "edit") loadEditEmployeeTab(employee);
+  if (tab === "timeline") loadTimelineTab(employee);
+  if (tab === "notes") loadAddNoteTab();
+  if (tab === "equipment") loadEquipmentTab(employee);
+  if (tab === "training") loadTrainingTab(employee);
+  if (tab === "schedule") loadScheduleTab(employee);
 }
 
 function loadEditEmployeeTab(employee) {
