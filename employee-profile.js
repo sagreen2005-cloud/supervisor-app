@@ -5,6 +5,7 @@ async function openEmployeeProfile(id) {
   const employee = employees.find(e => e.id === id);
 
   if (!employee.equipment) employee.equipment = [];
+  if (!employee.training) employee.training = [];
   if (!employee.activity) employee.activity = [];
 
   await updateRecord("employees", employee);
@@ -72,12 +73,7 @@ async function showEmployeeTab(tab) {
   }
 
   if (tab === "training") {
-    container.innerHTML = `
-      <section class="card">
-        <h3>Training / Certifications</h3>
-        <p class="muted">Training and certification tracking will be added later.</p>
-      </section>
-    `;
+    loadTrainingTab(employee);
   }
 
   if (tab === "schedule") {
