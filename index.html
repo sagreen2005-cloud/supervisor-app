@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Supervisor App</title>
+</head>
+<body>
+  <h1>Supervisor App</h1>
+
+  <input id="name" placeholder="Employee Name">
+  <input id="phone" placeholder="Phone Number">
+  <button onclick="saveEmployee()">Save Employee</button>
+
+  <h2>Employees</h2>
+  <ul id="employeeList"></ul>
+
+  <script>
+    let db;
+
+    const request = indexedDB.open("SupervisorAppDB", 1);
+
+    request.onupgradeneeded = function(event) {
+      db = event.target.result;
+      db.createObjectStore("employees", { keyPath: "id", autoIncrement: true });
+    };
+
+    request.onsuccess = function(event) {
+      db = event.target.result;
+      loadEmployees();
+    };
+
+    function saveEmployee() {
+      const employee = {
+        name: document.getElementById("name").value,
+        phone: document.getElementById("phone").value,
+        createdAt: new Date().toISOString()
+      };
+
+      const transaction = db.transaction(["employees"], "readwrite");
+      const store = transaction.objectStore("employees");
+      store.add(employee);
+
+      transaction.oncomplete = function() {
+        document.getElementById("name").value = "";
+        document.getElementById("phone").value = "";
+        loadEmployees();
+      };
+    }
+
+    function loadEmployees() {
+      const list = document.getElementById("employeeList");
+      list.innerHTML = "";
+
+      const transaction = db.transaction(["employees"], "readonly");
+      const store = transaction.objectStore("employees");
+
+      store.openCursor().onsuccess = function(event) {
+        const cursor = event.target.result;
+
+        if (cursor) {
+          const li = document.createElement("li");
+          li.textContent = cursor.value.name + " - " + cursor.value.phone;
+          list.appendChild(li);
+          cursor.continue();
+        }
+      };
+    }
+  </script>
+</body>
+</html>
