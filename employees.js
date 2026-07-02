@@ -53,7 +53,8 @@ async function saveEmployee() {
     hireDate: document.getElementById("hireDate").value,
     notes: document.getElementById("employeeNotes").value.trim(),
     activity: [],
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   };
 
   if (!employee.firstName || !employee.lastName) {
@@ -124,6 +125,7 @@ async function openEmployeeProfile(id) {
 
       <div class="profile-tabs">
         <button onclick="showEmployeeTab('overview')">Overview</button>
+        <button onclick="showEmployeeTab('edit')">Edit Employee</button>
         <button onclick="showEmployeeTab('timeline')">Timeline</button>
         <button onclick="showEmployeeTab('notes')">Add Note</button>
         <button onclick="showEmployeeTab('equipment')">Equipment</button>
@@ -156,6 +158,29 @@ async function showEmployeeTab(tab) {
         </div>
 
         <p class="employee-note">${employee.notes || "No general notes entered."}</p>
+      </section>
+    `;
+  }
+
+  if (tab === "edit") {
+    container.innerHTML = `
+      <section class="card">
+        <h3>Edit Employee</h3>
+
+        <div class="form-grid">
+          <input id="editFirstName" placeholder="First Name" value="${employee.firstName || ""}" />
+          <input id="editLastName" placeholder="Last Name" value="${employee.lastName || ""}" />
+          <input id="editBadge" placeholder="Badge Number" value="${employee.badge || ""}" />
+          <input id="editRank" placeholder="Rank" value="${employee.rank || ""}" />
+          <input id="editPhone" placeholder="Phone Number" value="${employee.phone || ""}" />
+          <input id="editEmail" placeholder="Email" value="${employee.email || ""}" />
+          <input id="editAssignment" placeholder="Assignment / Shift" value="${employee.assignment || ""}" />
+          <input id="editHireDate" type="date" value="${employee.hireDate || ""}" />
+        </div>
+
+        <textarea id="editEmployeeNotes" placeholder="General notes / quick reference information">${employee.notes || ""}</textarea>
+
+        <button onclick="saveEmployeeEdits()">Save Changes</button>
       </section>
     `;
   }
@@ -222,6 +247,30 @@ async function showEmployeeTab(tab) {
   }
 }
 
+async function saveEmployeeEdits() {
+  const employees = await getAllRecords("employees");
+  const employee = employees.find(e => e.id === selectedEmployeeId);
+
+  employee.firstName = document.getElementById("editFirstName").value.trim();
+  employee.lastName = document.getElementById("editLastName").value.trim();
+  employee.badge = document.getElementById("editBadge").value.trim();
+  employee.rank = document.getElementById("editRank").value.trim();
+  employee.phone = document.getElementById("editPhone").value.trim();
+  employee.email = document.getElementById("editEmail").value.trim();
+  employee.assignment = document.getElementById("editAssignment").value.trim();
+  employee.hireDate = document.getElementById("editHireDate").value;
+  employee.notes = document.getElementById("editEmployeeNotes").value.trim();
+  employee.updatedAt = new Date().toISOString();
+
+  if (!employee.firstName || !employee.lastName) {
+    alert("First and last name are required.");
+    return;
+  }
+
+  await updateRecord("employees", employee);
+  await openEmployeeProfile(employee.id);
+}
+
 async function addEmployeeActivity() {
   const employees = await getAllRecords("employees");
   const employee = employees.find(e => e.id === selectedEmployeeId);
@@ -240,6 +289,7 @@ async function addEmployeeActivity() {
   if (!employee.activity) employee.activity = [];
 
   employee.activity.push(activity);
+  employee.updatedAt = new Date().toISOString();
 
   await updateRecord("employees", employee);
   await openEmployeeProfile(employee.id);
