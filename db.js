@@ -2,7 +2,7 @@ let db;
 
 function openDatabase() {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open("SupervisorAppDB", 2);
+    const request = indexedDB.open("SupervisorAppDB", 3);
 
     request.onupgradeneeded = function(event) {
       db = event.target.result;
@@ -11,6 +11,12 @@ function openDatabase() {
         db.createObjectStore("employees", {
           keyPath: "id",
           autoIncrement: true
+        });
+      }
+
+      if (!db.objectStoreNames.contains("appSettings")) {
+        db.createObjectStore("appSettings", {
+          keyPath: "key"
         });
       }
     };
@@ -77,6 +83,28 @@ function clearStore(storeName) {
     const request = store.clear();
 
     request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error);
+  });
+}
+
+function saveSetting(key, value) {
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(["appSettings"], "readwrite");
+    const store = transaction.objectStore("appSettings");
+    const request = store.put({ key, value });
+
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error);
+  });
+}
+
+function getSetting(key) {
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(["appSettings"], "readonly");
+    const store = transaction.objectStore("appSettings");
+    const request = store.get(key);
+
+    request.onsuccess = () => resolve(request.result ? request.result.value : null);
     request.onerror = () => reject(request.error);
   });
 }
