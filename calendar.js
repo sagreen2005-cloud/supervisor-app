@@ -1,3 +1,7 @@
+let calendarEmployeesCache = [];
+let calendarSearchTimer = null;
+let calendarRenderToken = 0;
+
 async function loadCalendarPage() {
   document.getElementById("content").innerHTML = `
     <div class="page-header">
@@ -32,20 +36,39 @@ async function loadCalendarPage() {
 
     <section class="card">
       <h3>Monthly Schedule</h3>
-      <div id="calendarGrid"></div>
+      <div id="calendarGrid">
+        <p class="muted">Loading calendar...</p>
+      </div>
     </section>
 
     <section class="card">
       <h3>Schedule List</h3>
-      <div id="calendarList"></div>
+      <div id="calendarList">
+        <p class="muted">Loading schedule entries...</p>
+      </div>
     </section>
   `;
 
   document.getElementById("calendarMonth").addEventListener("change", renderCalendar);
   document.getElementById("calendarTypeFilter").addEventListener("change", renderCalendar);
-  document.getElementById("calendarSearch").addEventListener("input", renderCalendar);
 
-  await renderCalendar();
+  document.getElementById("calendarSearch").addEventListener("input", () => {
+    clearTimeout(calendarSearchTimer);
+    calendarSearchTimer = setTimeout(renderCalendar, 175);
+  });
+
+  try {
+    calendarEmployeesCache = await getAllRecords("employees");
+    await renderCalendar();
+  } catch (error) {
+    console.error("Calendar load failed:", error);
+
+    document.getElementById("calendarGrid").innerHTML =
+      `<p class="muted">The calendar could not be loaded.</p>`;
+
+    document.getElementById("calendarList").innerHTML =
+      `<p class="muted">The schedule list could not be loaded.</p>`;
+  }
 }
 
 function getCurrentMonthValue() {
@@ -55,99 +78,141 @@ function getCurrentMonthValue() {
 }
 
 async function renderCalendar() {
-  const employees = await getAllRecords("employees");
+  const renderToken = ++calendarRenderToken;
 
-  const monthValue = document.getElementById("calendarMonth").value || getCurrentMonthValue();
-  const typeFilter = document.getElementById("calendarTypeFilter").value || "All";
-  const search = (document.getElementById("calendarSearch").value || "").toLowerCase();
+  const monthInput = document.getElementById("calendarMonth");
+  const typeInput = document.getElementById("calendarTypeFilter");
+  const searchInput = document.getElementById("calendarSearch");
 
-  const parts = monthValue.split("-");
-  const year = Number(parts[0]);
-  const month = Number(parts[1]);
+  if (!monthInput || !typeInput || !searchInput) return;
 
-  let entries = [];
+  const monthValue = monthInput.value || getCurrentMonthValue();
+  const typeFilter = typeInput.value || "All";
+  const search = searchInput.value.trim().toLowerCase();
 
-  employees.forEach(employee => {
-    const employeeName = `${employee.rank || ""} ${employee.firstName || ""} ${employee.lastName || ""}`.trim();
+  const [yearText, monthText] = monthValue.split("-");
+  const year = Number(yearText);
+  const month = Number(monthText);
 
-    (employee.schedule || []).forEach((item, index) => {
-      if (!item.startDate) return;
+  if (!year || !month) return;
+
+  const monthStart = `${year}-${String(month).padStart(2, "0")}-01`;
+  const monthEndDay = new Date(year, month, 0).getDate();
+  const monthEnd = `${year}-${String(month).padStart(2, "0")}-${String(monthEndDay).padStart(2, "0")}`;
+
+  const entries = [];
+  const entriesByDate = new Map();
+  const uniqueScheduleEntries = new Map();
+
+  for (const employee of calendarEmployeesCache) {
+    const employeeName = formatCalendarEmployeeName(employee);
+
+    for (let index = 0; index < (employee.schedule || []).length; index++) {
+      const item = employee.schedule[index];
+
+      if (!item?.startDate) continue;
 
       const startDate = item.startDate;
       const endDate = item.endDate || item.startDate;
 
-      const matchesType = typeFilter === "All" || item.type === typeFilter;
+      if (endDate < monthStart || startDate > monthEnd) continue;
+      if (typeFilter !== "All" && item.type !== typeFilter) continue;
 
-      const searchableText = `
-        ${employeeName}
-        ${item.type || ""}
-        ${item.notes || ""}
-        ${item.startDate || ""}
-        ${item.endDate || ""}
-      `.toLowerCase();
+      if (search) {
+        const searchableText = [
+          employeeName,
+          item.type || "",
+          item.notes || "",
+          item.startDate || "",
+          item.endDate || ""
+        ].join(" ").toLowerCase();
 
-      const matchesSearch = searchableText.includes(search);
+        if (!searchableText.includes(search)) continue;
+      }
 
-      if (!matchesType || !matchesSearch) return;
+      const visibleStart = startDate < monthStart ? monthStart : startDate;
+      const visibleEnd = endDate > monthEnd ? monthEnd : endDate;
 
-      const dates = getDatesBetween(startDate, endDate);
+      const baseEntry = {
+        employeeId: employee.id,
+        employeeName,
+        type: item.type || "Other",
+        startDate,
+        endDate,
+        hours: item.hours,
+        notes: item.notes,
+        index
+      };
 
-      dates.forEach(dateString => {
-        const dateParts = dateString.split("-");
-        const entryYear = Number(dateParts[0]);
-        const entryMonth = Number(dateParts[1]);
+      uniqueScheduleEntries.set(`${employee.id}-${index}`, baseEntry);
 
-        if (entryYear === year && entryMonth === month) {
-          entries.push({
-            employeeId: employee.id,
-            employeeName,
-            type: item.type || "Other",
-            date: dateString,
-            startDate,
-            endDate,
-            hours: item.hours,
-            notes: item.notes,
-            index
-          });
-        }
-      });
-    });
-  });
-
-  renderCalendarGrid(year, month, entries);
-  renderCalendarList(entries);
-}
-
-function getDatesBetween(startDate, endDate) {
-  const dates = [];
-
-  const startParts = startDate.split("-");
-  const endParts = endDate.split("-");
-
-  let current = new Date(Number(startParts[0]), Number(startParts[1]) - 1, Number(startParts[2]));
-  const end = new Date(Number(endParts[0]), Number(endParts[1]) - 1, Number(endParts[2]));
-
-  while (current <= end) {
-    const y = current.getFullYear();
-    const m = String(current.getMonth() + 1).padStart(2, "0");
-    const d = String(current.getDate()).padStart(2, "0");
-
-    dates.push(`${y}-${m}-${d}`);
-    current.setDate(current.getDate() + 1);
+      addCalendarRangeEntries(
+        visibleStart,
+        visibleEnd,
+        baseEntry,
+        entries,
+        entriesByDate
+      );
+    }
   }
 
-  return dates;
+  if (renderToken !== calendarRenderToken) return;
+
+  renderCalendarGrid(year, month, entriesByDate);
+  renderCalendarList([...uniqueScheduleEntries.values()]);
 }
 
-function renderCalendarGrid(year, month, entries) {
+function addCalendarRangeEntries(startDate, endDate, baseEntry, entries, entriesByDate) {
+  const [startYear, startMonth, startDay] = startDate.split("-").map(Number);
+  const [endYear, endMonth, endDay] = endDate.split("-").map(Number);
+
+  const current = new Date(startYear, startMonth - 1, startDay);
+  const end = new Date(endYear, endMonth - 1, endDay);
+
+  while (current <= end) {
+    const dateString = formatCalendarDate(current);
+
+    const entry = {
+      ...baseEntry,
+      date: dateString
+    };
+
+    entries.push(entry);
+
+    if (!entriesByDate.has(dateString)) {
+      entriesByDate.set(dateString, []);
+    }
+
+    entriesByDate.get(dateString).push(entry);
+    current.setDate(current.getDate() + 1);
+  }
+}
+
+function formatCalendarDate(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function formatCalendarEmployeeName(employee) {
+  return `${employee.rank || ""} ${employee.firstName || ""} ${employee.lastName || ""}`
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function renderCalendarGrid(year, month, entriesByDate) {
   const grid = document.getElementById("calendarGrid");
+  if (!grid) return;
 
   const firstDay = new Date(year, month - 1, 1);
   const lastDay = new Date(year, month, 0);
   const daysInMonth = lastDay.getDate();
   const firstDayOfWeek = firstDay.getDay();
 
-  let html = `
+  const html = [];
+
+  html.push(`
     <div class="calendar-grid">
       <div class="calendar-day-header">Sun</div>
       <div class="calendar-day-header">Mon</div>
@@ -156,76 +221,78 @@ function renderCalendarGrid(year, month, entries) {
       <div class="calendar-day-header">Thu</div>
       <div class="calendar-day-header">Fri</div>
       <div class="calendar-day-header">Sat</div>
-  `;
+  `);
 
   for (let i = 0; i < firstDayOfWeek; i++) {
-    html += `<div class="calendar-day empty-day"></div>`;
+    html.push(`<div class="calendar-day empty-day"></div>`);
   }
+
+  const monthString = String(month).padStart(2, "0");
 
   for (let day = 1; day <= daysInMonth; day++) {
-    const dayString = String(day).padStart(2, "0");
-    const monthString = String(month).padStart(2, "0");
-    const dateString = `${year}-${monthString}-${dayString}`;
+    const dateString = `${year}-${monthString}-${String(day).padStart(2, "0")}`;
+    const dayEntries = entriesByDate.get(dateString) || [];
 
-    const dayEntries = entries.filter(entry => entry.date === dateString);
-
-    html += `
+    html.push(`
       <div class="calendar-day">
         <strong>${day}</strong>
-
         ${dayEntries.map(entry => `
-          <div class="calendar-entry ${getCalendarTypeClass(entry.type)}" onclick="openEmployeeProfile(${entry.employeeId})">
-            ${entry.employeeName} - ${entry.type}
-          </div>
+          <button
+            type="button"
+            class="calendar-entry ${getCalendarTypeClass(entry.type)}"
+            onclick="openEmployeeProfile(${entry.employeeId})"
+            title="${escapeCalendarHtml(entry.employeeName)} — ${escapeCalendarHtml(entry.type)}"
+          >
+            ${escapeCalendarHtml(entry.employeeName)} - ${escapeCalendarHtml(entry.type)}
+          </button>
         `).join("")}
       </div>
-    `;
+    `);
   }
 
-  html += `</div>`;
-
-  grid.innerHTML = html;
+  html.push(`</div>`);
+  grid.innerHTML = html.join("");
 }
 
 function renderCalendarList(entries) {
   const list = document.getElementById("calendarList");
+  if (!list) return;
 
-  const unique = [];
-
-  entries.forEach(entry => {
-    const key = `${entry.employeeId}-${entry.index}`;
-
-    if (!unique.some(item => `${item.employeeId}-${item.index}` === key)) {
-      unique.push(entry);
-    }
-  });
-
-  if (unique.length === 0) {
+  if (!entries.length) {
     list.innerHTML = `<p class="muted">No schedule entries found for this month.</p>`;
     return;
   }
 
-  list.innerHTML = unique
-    .sort((a, b) => a.startDate.localeCompare(b.startDate))
-    .map(entry => `
-      <div class="schedule-card clickable" onclick="openEmployeeProfile(${entry.employeeId})">
-        <div class="employee-top">
-          <div>
-            <h3>${entry.employeeName}</h3>
-            <p class="muted">${entry.type} | ${entry.startDate} to ${entry.endDate || entry.startDate}</p>
-          </div>
-        </div>
+  entries.sort((a, b) => {
+    const dateComparison = a.startDate.localeCompare(b.startDate);
+    if (dateComparison !== 0) return dateComparison;
+    return a.employeeName.localeCompare(b.employeeName);
+  });
 
-        <div class="employee-details">
-          <div><span>Type</span>${entry.type}</div>
-          <div><span>Hours</span>${entry.hours || "N/A"}</div>
-          <div><span>Start</span>${entry.startDate}</div>
+  list.innerHTML = entries.map(entry => `
+    <div class="schedule-card clickable" onclick="openEmployeeProfile(${entry.employeeId})">
+      <div class="employee-top">
+        <div>
+          <h3>${escapeCalendarHtml(entry.employeeName)}</h3>
+          <p class="muted">
+            ${escapeCalendarHtml(entry.type)} |
+            ${escapeCalendarHtml(entry.startDate)} to
+            ${escapeCalendarHtml(entry.endDate || entry.startDate)}
+          </p>
         </div>
-
-        ${entry.notes ? `<p class="employee-note">${entry.notes}</p>` : ""}
       </div>
-    `)
-    .join("");
+
+      <div class="employee-details">
+        <div><span>Type</span>${escapeCalendarHtml(entry.type)}</div>
+        <div><span>Hours</span>${escapeCalendarHtml(entry.hours || "N/A")}</div>
+        <div><span>Start</span>${escapeCalendarHtml(entry.startDate)}</div>
+      </div>
+
+      ${entry.notes
+        ? `<p class="employee-note">${escapeCalendarHtml(entry.notes)}</p>`
+        : ""}
+    </div>
+  `).join("");
 }
 
 function getCalendarTypeClass(type) {
@@ -235,4 +302,13 @@ function getCalendarTypeClass(type) {
   if (type === "Court") return "calendar-court";
   if (type === "Overtime") return "calendar-overtime";
   return "calendar-other";
+}
+
+function escapeCalendarHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
