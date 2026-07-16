@@ -4,8 +4,8 @@ function showPage(page) {
       loadDashboard();
       break;
 
-    case "dailyLog":
-      loadDailyLogPage();
+    case "rollcall":
+      loadrollcallPage();
       break;
 
     case "employees":
