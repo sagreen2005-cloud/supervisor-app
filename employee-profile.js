@@ -121,17 +121,17 @@ function loadEmployee360(employee) {
     </section>
 
     <div class="dashboard-grid employee-360-grid">
-      ${renderEmployee360Card(activity.length, "Timeline Notes", "showEmployeeTab('timeline')")}
+      ${renderEmployee360Card(activity.length, "Timeline Notes", "openEmployee360Details('timeline')")}
       ${renderEmployee360Card(performance.length, "Performance Entries", "openEmployee360Details('performance')")}
       ${renderEmployee360Card(reportReviews.length, "Report Reviews", "openEmployee360Details('reports')")}
       ${renderEmployee360Card(excellentReports, "Excellent Reports", "openEmployee360Details('excellentReports')")}
       ${renderEmployee360Card(returnedReports, "Returned Reports", "openEmployee360Details('returnedReports')", "warning-card")}
       ${renderEmployee360Card(commendations, "Positive Notes", "openEmployee360Details('positiveNotes')")}
-      ${renderEmployee360Card(equipment.length, "Equipment Items", "showEmployeeTab('equipment')")}
-      ${renderEmployee360Card(training.length, "Training Records", "showEmployeeTab('training')")}
+      ${renderEmployee360Card(equipment.length, "Equipment Items", "openEmployee360Details('equipment')")}
+      ${renderEmployee360Card(training.length, "Training Records", "openEmployee360Details('training')")}
       ${renderEmployee360Card(trainingExpiringSoon, "Training Expiring Soon", "openEmployee360Details('expiringTraining')", "warning-card")}
       ${renderEmployee360Card(expiredTraining, "Expired Training", "openEmployee360Details('expiredTraining')", "danger-stat")}
-      ${renderEmployee360Card(schedule.length, "Schedule Entries", "showEmployeeTab('schedule')")}
+      ${renderEmployee360Card(schedule.length, "Schedule Entries", "openEmployee360Details('schedule')")}
       ${renderEmployee360Card(needsImprovement, "Needs Improvement", "openEmployee360Details('needsImprovement')", "danger-stat")}
     </div>
 
@@ -240,6 +240,8 @@ function openEmployee360Details(category) {
   const performance = employee.performance || [];
   const reportReviews = employee.reportReviews || [];
   const training = employee.training || [];
+  const equipment = employee.equipment || [];
+  const schedule = employee.schedule || [];
 
   const today = startOfEmployee360Day(new Date());
   const thirtyDaysFromNow = new Date(today);
@@ -249,7 +251,31 @@ function openEmployee360Details(category) {
   let heading = "Details";
   let description = "";
 
-  if (category === "performance") {
+  if (category === "timeline") {
+    const sorted = activity
+      .slice()
+      .sort((a, b) => new Date(b.date || b.createdAt || 0) - new Date(a.date || a.createdAt || 0));
+
+    heading = "Timeline Notes";
+    description = `${sorted.length} timeline entr${sorted.length === 1 ? "y" : "ies"}`;
+    records = sorted.map(renderEmployee360ActivityItem);
+  } else if (category === "equipment") {
+    heading = "Equipment Items";
+    description = `${equipment.length} equipment item${equipment.length === 1 ? "" : "s"}`;
+    records = equipment.map(renderEmployee360EquipmentItem);
+  } else if (category === "training") {
+    heading = "Training Records";
+    description = `${training.length} training record${training.length === 1 ? "" : "s"}`;
+    records = training.map(renderEmployee360TrainingItem);
+  } else if (category === "schedule") {
+    const sorted = schedule
+      .slice()
+      .sort((a, b) => String(b.startDate || "").localeCompare(String(a.startDate || "")));
+
+    heading = "Schedule Entries";
+    description = `${sorted.length} schedule entr${sorted.length === 1 ? "y" : "ies"}`;
+    records = sorted.map(renderEmployee360ScheduleItem);
+  } else if (category === "performance") {
     heading = "Performance Entries";
     description = `${performance.length} total performance record${performance.length === 1 ? "" : "s"}`;
     records = performance.map(renderEmployee360PerformanceItem);
@@ -303,9 +329,16 @@ function openEmployee360Details(category) {
 
   title.textContent = heading;
   subtitle.textContent = description;
-  body.innerHTML = records.length
-    ? `<div class="employee-360-detail-list">${records.join("")}</div>`
-    : `<p class="muted">No matching records found.</p>`;
+  const fullTabButton = getEmployee360FullTabButton(category);
+
+  body.innerHTML = `
+    ${fullTabButton}
+    ${
+      records.length
+        ? `<div class="employee-360-detail-list">${records.join("")}</div>`
+        : `<p class="muted">No matching records found.</p>`
+    }
+  `;
 
   panel.hidden = false;
   panel.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -386,6 +419,92 @@ function renderEmployee360TrainingItem(item) {
       <div class="employee-360-detail-meta">Completed: ${escapeEmployee360Html(completed)}</div>
       ${note ? `<p>${escapeEmployee360Html(note)}</p>` : ""}
     </article>
+  `;
+}
+
+function renderEmployee360EquipmentItem(item) {
+  const heading =
+    item.itemName ||
+    item.name ||
+    item.equipment ||
+    item.type ||
+    item.description ||
+    "Equipment Item";
+
+  const issued =
+    item.issueDate ||
+    item.issuedDate ||
+    item.date ||
+    item.createdAt ||
+    "Not listed";
+
+  const returned =
+    item.returnDate ||
+    item.returnedDate ||
+    item.status ||
+    "Not listed";
+
+  const serial =
+    item.serialNumber ||
+    item.serial ||
+    item.assetNumber ||
+    item.assetTag ||
+    "";
+
+  const note = item.notes || item.note || item.comments || "";
+
+  return `
+    <article class="employee-360-detail-item">
+      <div class="employee-360-detail-item-header">
+        <strong>${escapeEmployee360Html(heading)}</strong>
+        <span>${escapeEmployee360Html(formatEmployee360Date(issued))}</span>
+      </div>
+      <div class="employee-360-detail-meta">
+        ${serial ? `Serial / Asset: ${escapeEmployee360Html(serial)} · ` : ""}
+        Status / Return: ${escapeEmployee360Html(returned)}
+      </div>
+      ${note ? `<p>${escapeEmployee360Html(note)}</p>` : ""}
+    </article>
+  `;
+}
+
+function renderEmployee360ScheduleItem(item) {
+  const heading = item.type || "Schedule Entry";
+  const start = item.startDate || "Not listed";
+  const end = item.endDate || start;
+  const hours = item.hours || "N/A";
+  const note = item.notes || item.note || "";
+
+  return `
+    <article class="employee-360-detail-item">
+      <div class="employee-360-detail-item-header">
+        <strong>${escapeEmployee360Html(heading)}</strong>
+        <span>${escapeEmployee360Html(start)} to ${escapeEmployee360Html(end)}</span>
+      </div>
+      <div class="employee-360-detail-meta">Hours: ${escapeEmployee360Html(hours)}</div>
+      ${note ? `<p>${escapeEmployee360Html(note)}</p>` : ""}
+    </article>
+  `;
+}
+
+function getEmployee360FullTabButton(category) {
+  const tabMap = {
+    timeline: ["timeline", "Open Full Timeline"],
+    positiveNotes: ["timeline", "Open Full Timeline"],
+    equipment: ["equipment", "Manage Equipment"],
+    training: ["training", "Manage Training"],
+    expiringTraining: ["training", "Manage Training"],
+    expiredTraining: ["training", "Manage Training"],
+    schedule: ["schedule", "Manage Schedule"]
+  };
+
+  const target = tabMap[category];
+  if (!target) return "";
+
+  return `
+    <div class="employee-360-detail-actions">
+      <button type="button" onclick="showEmployeeTab('${target[0]}')">${target[1]}</button>
+    </div>
   `;
 }
 
