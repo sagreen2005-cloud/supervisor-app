@@ -86,7 +86,147 @@ const ROLL_CALL_TEMPLATES = {
     "Follow-up"
   ],
   "Blank": []
+
 };
+
+const DEFAULT_SMART_IMPORT_RULES = [
+  {
+    id: "staffing",
+    category: "Staffing",
+    keywords: [
+      "staffing",
+      "short staffed",
+      "vacation",
+      "sick leave",
+      "off duty",
+      "coverage",
+      "manpower",
+      "overtime coverage"
+    ]
+  },
+  {
+    id: "officer-safety",
+    category: "Officer Safety",
+    keywords: [
+      "officer safety",
+      "road closure",
+      "construction",
+      "hazard",
+      "threat",
+      "ambush",
+      "weapon",
+      "unsafe",
+      "expect delays"
+    ]
+  },
+  {
+    id: "administrative",
+    category: "Administrative",
+    keywords: [
+      "time card",
+      "timesheet",
+      "pay period",
+      "evaluation",
+      "submit",
+      "form",
+      "deadline",
+      "due by",
+      "rfi",
+      "geo",
+      "watch command"
+    ]
+  },
+  {
+    id: "training",
+    category: "Training",
+    keywords: [
+      "training",
+      "class",
+      "course",
+      "certification",
+      "academy",
+      "applications close",
+      "posting closes",
+      "sro",
+      "evergreen"
+    ]
+  },
+  {
+    id: "policy",
+    category: "Policy Updates",
+    keywords: [
+      "policy",
+      "procedure",
+      "general order",
+      "directive",
+      "sop",
+      "standard operating procedure"
+    ]
+  },
+  {
+    id: "dui",
+    category: "DUI Shift",
+    keywords: [
+      "dui",
+      "impaired driver",
+      "blitz",
+      "saturation",
+      "sobriety",
+      "alcohol enforcement",
+      "drug recognition"
+    ]
+  },
+  {
+    id: "events",
+    category: "Special Events",
+    keywords: [
+      "event",
+      "parade",
+      "festival",
+      "concert",
+      "pioneer day",
+      "holiday",
+      "community event"
+    ]
+  },
+  {
+    id: "bolo",
+    category: "BOLO / Intelligence",
+    keywords: [
+      "bolo",
+      "be on the lookout",
+      "suspect",
+      "vehicle description",
+      "wanted",
+      "intelligence",
+      "attempt to locate"
+    ]
+  },
+  {
+    id: "community",
+    category: "Community Information",
+    keywords: [
+      "community",
+      "neighborhood",
+      "school",
+      "resident",
+      "public",
+      "outreach"
+    ]
+  },
+  {
+    id: "reminders",
+    category: "Reminders",
+    keywords: [
+      "reminder",
+      "remember",
+      "don't forget",
+      "follow up",
+      "complete by",
+      "due"
+    ]
+  }
+];
 
 async function loadRollCallPage() {
   currentRollCallId = null;
@@ -98,7 +238,10 @@ async function loadRollCallPage() {
         <p>Create one complete briefing for each date or shift.</p>
       </div>
 
-      <button type="button" onclick="showCreateRollCallForm()">+ New Roll Call</button>
+      <div class="roll-call-editor-actions">
+        <button type="button" onclick="showSmartImportRules()">Import Rules</button>
+        <button type="button" onclick="showCreateRollCallForm()">+ New Roll Call</button>
+      </div>
     </div>
 
     <section id="createRollCallCard" class="card" hidden>
@@ -168,6 +311,26 @@ async function loadRollCallPage() {
 
       <div id="rollCallLibrary"></div>
     </section>
+
+    <div id="smartImportRulesModal" class="roll-call-modal" onclick="closeSmartImportRules(event)">
+      <div class="roll-call-modal-content" onclick="event.stopPropagation()">
+        <div class="roll-call-header-row">
+          <div>
+            <h3>Smart Import Rules</h3>
+            <p class="muted">Add words or phrases that should map to a Roll Call category.</p>
+          </div>
+          <button type="button" class="roll-call-icon-button" onclick="closeSmartImportRules()">×</button>
+        </div>
+
+        <div id="smartImportRulesList"></div>
+
+        <div class="roll-call-form-actions">
+          <button type="button" onclick="addSmartImportRule()">+ Add Rule</button>
+          <button type="button" onclick="saveSmartImportRules()">Save Rules</button>
+          <button type="button" class="secondary-btn" onclick="resetSmartImportRules()">Reset Defaults</button>
+        </div>
+      </div>
+    </div>
   `;
 
   document.getElementById("newRollCallDate").value = getRollCallLocalDate();
@@ -361,6 +524,8 @@ async function openRollCallEditor(rollCallId) {
         </div>
 
         <div class="roll-call-editor-actions">
+          <button type="button" onclick="showSmartEmailImport()">Smart Email Import</button>
+          <button type="button" onclick="showSmartImportRules()">Import Rules</button>
           <button type="button" onclick="downloadRollCallPdf('${rollCall.id}')">Download PDF</button>
           <button type="button" onclick="copyRollCallText('${rollCall.id}')">Copy Text</button>
           <button type="button" onclick="showCarryForwardDialog('${rollCall.id}')">Carry Forward</button>
@@ -440,6 +605,56 @@ async function openRollCallEditor(rollCallId) {
       </div>
     </div>
 
+    <div id="smartEmailImportModal" class="roll-call-modal" onclick="closeSmartEmailImport(event)">
+      <div class="roll-call-modal-content" onclick="event.stopPropagation()">
+        <div class="roll-call-header-row">
+          <div>
+            <h3>Smart Email Import</h3>
+            <p class="muted">Paste an email and review suggested Roll Call topics before adding them.</p>
+          </div>
+          <button type="button" class="roll-call-icon-button" onclick="closeSmartEmailImport()">×</button>
+        </div>
+
+        <div class="form-grid">
+          <input id="smartEmailSource" placeholder="Source, such as Command Email or Training Unit" />
+          <input id="smartEmailSourceDate" type="date" />
+        </div>
+
+        <textarea
+          id="smartEmailText"
+          class="smart-email-source"
+          placeholder="Paste the full email text here..."
+        ></textarea>
+
+        <div class="roll-call-form-actions">
+          <button type="button" onclick="analyzeSmartEmail()">Analyze Email</button>
+          <button type="button" class="secondary-btn" onclick="closeSmartEmailImport()">Cancel</button>
+        </div>
+
+        <div id="smartEmailSuggestions"></div>
+      </div>
+    </div>
+
+    <div id="smartImportRulesModal" class="roll-call-modal" onclick="closeSmartImportRules(event)">
+      <div class="roll-call-modal-content" onclick="event.stopPropagation()">
+        <div class="roll-call-header-row">
+          <div>
+            <h3>Smart Import Rules</h3>
+            <p class="muted">Add words or phrases that should map to a Roll Call category.</p>
+          </div>
+          <button type="button" class="roll-call-icon-button" onclick="closeSmartImportRules()">×</button>
+        </div>
+
+        <div id="smartImportRulesList"></div>
+
+        <div class="roll-call-form-actions">
+          <button type="button" onclick="addSmartImportRule()">+ Add Rule</button>
+          <button type="button" onclick="saveSmartImportRules()">Save Rules</button>
+          <button type="button" class="secondary-btn" onclick="resetSmartImportRules()">Reset Defaults</button>
+        </div>
+      </div>
+    </div>
+
     <div id="carryForwardModal" class="roll-call-modal" onclick="closeCarryForwardDialog(event)">
       <div class="roll-call-modal-content" onclick="event.stopPropagation()">
         <div class="roll-call-header-row">
@@ -509,11 +724,23 @@ function renderRollCallSections(rollCall) {
 
                 <p>${escapeRollCallHtml(item.note || "")}</p>
 
-                ${
-                  item.carryForward
-                    ? `<small class="muted">Carry-forward eligible</small>`
-                    : ""
-                }
+                <div class="roll-call-topic-meta">
+                  ${
+                    item.carryForward
+                      ? `<small class="muted">Carry-forward eligible</small>`
+                      : ""
+                  }
+                  ${
+                    item.visibleUntil
+                      ? `<small class="muted">Visible until: ${escapeRollCallHtml(item.visibleUntil)}</small>`
+                      : ""
+                  }
+                  ${
+                    item.source
+                      ? `<small class="muted">Source: ${escapeRollCallHtml(item.source)}</small>`
+                      : ""
+                  }
+                </div>
               </article>
             `).join("")
         }
@@ -625,12 +852,20 @@ async function saveRollCallTopic() {
   if (!section) return;
   if (!section.items) section.items = [];
 
+  const existingItem = itemId
+    ? section.items.find(item => item.id === itemId)
+    : null;
+
   const topic = {
     id: itemId || crypto.randomUUID(),
     title,
     note,
     priority: document.getElementById("rollCallItemPriority").value,
     carryForward: document.getElementById("rollCallItemCarryForward").checked,
+    visibleUntil: existingItem?.visibleUntil || "",
+    source: existingItem?.source || "",
+    sourceDate: existingItem?.sourceDate || "",
+    originalText: existingItem?.originalText || "",
     updatedAt: new Date().toISOString()
   };
 
@@ -684,7 +919,10 @@ async function showCarryForwardDialog(rollCallId) {
 
   (rollCall.sections || []).forEach(section => {
     (section.items || []).forEach(item => {
-      if (item.carryForward) {
+      if (
+        item.carryForward &&
+        (!item.visibleUntil || item.visibleUntil >= getRollCallLocalDate())
+      ) {
         eligible.push({
           sectionId: section.id,
           sectionName: section.name,
@@ -897,6 +1135,13 @@ function createSimpleRollCallPdf(rollCall) {
         });
       });
 
+      if (item.source) {
+        logicalLines.push({
+          text: `  Source: ${item.source}${item.sourceDate ? ` (${item.sourceDate})` : ""}`,
+          size: 8
+        });
+      }
+
       logicalLines.push({ text: "", size: 10, gapAfter: 3 });
     });
   });
@@ -1032,6 +1277,13 @@ function buildRollCallPlainText(rollCall) {
     items.forEach(item => {
       lines.push(`- ${item.title}`);
       lines.push(`  ${item.note}`);
+
+      if (item.source) {
+        lines.push(
+          `  Source: ${item.source}${item.sourceDate ? ` (${item.sourceDate})` : ""}`
+        );
+      }
+
       lines.push("");
     });
   });
@@ -1127,4 +1379,585 @@ function escapeRollCallHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
+}
+
+
+async function showSmartEmailImport() {
+  if (!currentRollCallId) {
+    alert("Open a Roll Call before importing an email.");
+    return;
+  }
+
+  const modal = document.getElementById("smartEmailImportModal");
+  if (!modal) return;
+
+  document.getElementById("smartEmailText").value = "";
+  document.getElementById("smartEmailSource").value = "Command Email";
+  document.getElementById("smartEmailSourceDate").value = getRollCallLocalDate();
+  document.getElementById("smartEmailSuggestions").innerHTML = "";
+
+  modal.classList.add("open");
+}
+
+function closeSmartEmailImport(event) {
+  if (event && event.target !== event.currentTarget) return;
+  document.getElementById("smartEmailImportModal")?.classList.remove("open");
+}
+
+async function showSmartImportRules() {
+  const modal = document.getElementById("smartImportRulesModal");
+  if (!modal) return;
+
+  const rules = await getSmartImportRules();
+  renderSmartImportRulesEditor(rules);
+  modal.classList.add("open");
+}
+
+function closeSmartImportRules(event) {
+  if (event && event.target !== event.currentTarget) return;
+  document.getElementById("smartImportRulesModal")?.classList.remove("open");
+}
+
+async function getSmartImportRules() {
+  const store = await getRollCallStore();
+
+  if (!Array.isArray(store.smartImportRules) || !store.smartImportRules.length) {
+    store.smartImportRules = JSON.parse(JSON.stringify(DEFAULT_SMART_IMPORT_RULES));
+    store.updatedAt = new Date().toISOString();
+    await updateRecord("employees", store);
+  }
+
+  return store.smartImportRules;
+}
+
+function renderSmartImportRulesEditor(rules) {
+  const container = document.getElementById("smartImportRulesList");
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="smart-rule-list">
+      ${rules.map((rule, index) => `
+        <div class="smart-rule-card" data-rule-index="${index}">
+          <div class="form-grid">
+            <input
+              class="smart-rule-category"
+              value="${escapeRollCallHtml(rule.category || "")}"
+              placeholder="Category"
+            />
+
+            <input
+              class="smart-rule-keywords"
+              value="${escapeRollCallHtml((rule.keywords || []).join(", "))}"
+              placeholder="Keywords or phrases separated by commas"
+            />
+          </div>
+
+          <button type="button" class="danger-btn" onclick="removeSmartImportRule(${index})">
+            Remove Rule
+          </button>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
+function collectSmartImportRulesFromEditor() {
+  return [...document.querySelectorAll(".smart-rule-card")]
+    .map((card, index) => {
+      const category =
+        card.querySelector(".smart-rule-category")?.value.trim() || "";
+
+      const keywords =
+        (card.querySelector(".smart-rule-keywords")?.value || "")
+          .split(",")
+          .map(value => value.trim().toLowerCase())
+          .filter(Boolean);
+
+      return {
+        id: `rule-${index}-${Date.now()}`,
+        category,
+        keywords
+      };
+    })
+    .filter(rule => rule.category && rule.keywords.length);
+}
+
+function addSmartImportRule() {
+  const rules = collectSmartImportRulesFromEditor();
+
+  rules.push({
+    id: `rule-${Date.now()}`,
+    category: "Other",
+    keywords: []
+  });
+
+  renderSmartImportRulesEditor(rules);
+}
+
+function removeSmartImportRule(index) {
+  const rules = collectSmartImportRulesFromEditor();
+  rules.splice(index, 1);
+  renderSmartImportRulesEditor(rules);
+}
+
+async function saveSmartImportRules() {
+  const rules = collectSmartImportRulesFromEditor();
+
+  if (!rules.length) {
+    alert("Add at least one category rule.");
+    return;
+  }
+
+  const store = await getRollCallStore();
+  store.smartImportRules = rules;
+  store.updatedAt = new Date().toISOString();
+
+  await updateRecord("employees", store);
+  closeSmartImportRules();
+  alert("Smart Import rules saved.");
+}
+
+function resetSmartImportRules() {
+  if (!confirm("Reset Smart Import rules to the defaults?")) return;
+
+  renderSmartImportRulesEditor(
+    JSON.parse(JSON.stringify(DEFAULT_SMART_IMPORT_RULES))
+  );
+}
+
+async function analyzeSmartEmail() {
+  const sourceText =
+    document.getElementById("smartEmailText")?.value.trim() || "";
+
+  if (!sourceText) {
+    alert("Paste an email first.");
+    return;
+  }
+
+  const rules = await getSmartImportRules();
+  const suggestions = buildSmartEmailSuggestions(sourceText, rules);
+
+  window.smartEmailSuggestions = suggestions;
+  renderSmartEmailSuggestions(suggestions);
+}
+
+function buildSmartEmailSuggestions(sourceText, rules) {
+  const cleaned = String(sourceText || "")
+    .replace(/\r/g, "")
+    .replace(/\t/g, " ")
+    .trim();
+
+  const rawBlocks = cleaned
+    .split(/\n\s*\n|(?<=\.)\s+(?=[A-Z])|(?<=\!)\s+(?=[A-Z])|(?<=\?)\s+(?=[A-Z])/)
+    .flatMap(block => block.split(/\n(?=[•*-]\s)/))
+    .map(block => block.replace(/^[•*-]\s*/, "").replace(/\s+/g, " ").trim())
+    .filter(block => block.length >= 8);
+
+  const blocks = [...new Set(rawBlocks)];
+  const suggestions = [];
+
+  blocks.forEach((block, index) => {
+    const lower = block.toLowerCase();
+
+    let bestRule = null;
+    let bestScore = 0;
+
+    rules.forEach(rule => {
+      let score = 0;
+
+      (rule.keywords || []).forEach(keyword => {
+        const normalized = String(keyword || "").toLowerCase().trim();
+        if (!normalized) return;
+
+        if (lower.includes(normalized)) {
+          score += normalized.includes(" ") ? 3 : 1;
+        }
+      });
+
+      if (score > bestScore) {
+        bestScore = score;
+        bestRule = rule;
+      }
+    });
+
+    const visibleUntil = extractSmartImportDate(block);
+    const category = bestRule?.category || "Other";
+
+    suggestions.push({
+      id: `smart-${index}`,
+      selected: true,
+      category,
+      title: createSmartImportTitle(block),
+      note: simplifySmartImportText(block),
+      priority: inferSmartImportPriority(block),
+      carryForward: Boolean(
+        visibleUntil ||
+        /until|ongoing|through|closes|deadline|reminder|training|policy|follow up/i.test(block)
+      ),
+      visibleUntil,
+      originalText: block
+    });
+  });
+
+  return suggestions;
+}
+
+function renderSmartEmailSuggestions(suggestions) {
+  const container = document.getElementById("smartEmailSuggestions");
+  if (!container) return;
+
+  if (!suggestions.length) {
+    container.innerHTML =
+      `<p class="muted">No usable Roll Call topics were found.</p>`;
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="smart-suggestion-header">
+      <h4>Suggested Roll Call Topics</h4>
+      <p class="muted">Review every item before adding it.</p>
+    </div>
+
+    <div class="smart-suggestion-list">
+      ${suggestions.map((item, index) => `
+        <div class="smart-suggestion-card" data-suggestion-index="${index}">
+          <label class="roll-call-checkbox">
+            <input class="smart-suggestion-selected" type="checkbox" checked />
+            <span>Include this topic</span>
+          </label>
+
+          <div class="form-grid">
+            <select class="smart-suggestion-category">
+              ${getSmartImportCategoryOptions(item.category)}
+            </select>
+
+            <input
+              class="smart-suggestion-title"
+              value="${escapeRollCallHtml(item.title)}"
+              placeholder="Title"
+            />
+
+            <select class="smart-suggestion-priority">
+              <option value="Normal" ${item.priority === "Normal" ? "selected" : ""}>Normal</option>
+              <option value="High" ${item.priority === "High" ? "selected" : ""}>High</option>
+              <option value="Critical" ${item.priority === "Critical" ? "selected" : ""}>Critical</option>
+            </select>
+
+            <input
+              class="smart-suggestion-date"
+              type="date"
+              value="${escapeRollCallHtml(item.visibleUntil || "")}"
+              title="Visible until"
+            />
+
+            <label class="roll-call-checkbox">
+              <input
+                class="smart-suggestion-carry"
+                type="checkbox"
+                ${item.carryForward ? "checked" : ""}
+              />
+              <span>Carry forward</span>
+            </label>
+          </div>
+
+          <textarea class="smart-suggestion-note">${escapeRollCallHtml(item.note)}</textarea>
+
+          <details class="smart-original-email">
+            <summary>View original email text</summary>
+            <p>${escapeRollCallHtml(item.originalText)}</p>
+          </details>
+        </div>
+      `).join("")}
+    </div>
+
+    <div id="smartDuplicateWarnings"></div>
+
+    <div class="roll-call-form-actions">
+      <button type="button" onclick="checkSmartImportDuplicates()">Check Duplicates</button>
+      <button type="button" onclick="addSmartSuggestionsToRollCall()">Add Selected to Roll Call</button>
+    </div>
+  `;
+}
+
+function getSmartImportCategoryOptions(selectedCategory) {
+  const categories = [...new Set([
+    ...Object.values(ROLL_CALL_TEMPLATES).flat(),
+    ...DEFAULT_SMART_IMPORT_RULES.map(rule => rule.category),
+    "Other"
+  ])].sort();
+
+  return categories.map(category => `
+    <option
+      value="${escapeRollCallHtml(category)}"
+      ${category === selectedCategory ? "selected" : ""}
+    >
+      ${escapeRollCallHtml(category)}
+    </option>
+  `).join("");
+}
+
+async function checkSmartImportDuplicates() {
+  const store = await getRollCallStore();
+  const rollCall = findRollCall(store, currentRollCallId);
+
+  if (!rollCall) return;
+
+  const suggestions = collectSmartSuggestionsFromScreen();
+  const warnings = [];
+
+  suggestions.forEach((suggestion, suggestionIndex) => {
+    (rollCall.sections || []).forEach(section => {
+      (section.items || []).forEach(item => {
+        const similarity = calculateSmartImportSimilarity(
+          `${suggestion.title} ${suggestion.note}`,
+          `${item.title} ${item.note}`
+        );
+
+        if (similarity >= 0.45) {
+          warnings.push({
+            suggestionIndex,
+            suggestionTitle: suggestion.title,
+            existingTitle: item.title,
+            sectionName: section.name
+          });
+        }
+      });
+    });
+  });
+
+  const container = document.getElementById("smartDuplicateWarnings");
+  if (!container) return;
+
+  container.innerHTML = warnings.length
+    ? `
+      <div class="smart-duplicate-warning">
+        <strong>Possible duplicates found:</strong>
+        ${warnings.map(item => `
+          <p>
+            “${escapeRollCallHtml(item.suggestionTitle)}” may duplicate
+            “${escapeRollCallHtml(item.existingTitle)}”
+            in ${escapeRollCallHtml(item.sectionName)}.
+          </p>
+        `).join("")}
+      </div>
+    `
+    : `<p class="muted">No likely duplicates found.</p>`;
+}
+
+function collectSmartSuggestionsFromScreen() {
+  return [...document.querySelectorAll(".smart-suggestion-card")]
+    .filter(card => card.querySelector(".smart-suggestion-selected")?.checked)
+    .map((card, index) => {
+      const original =
+        window.smartEmailSuggestions?.[Number(card.dataset.suggestionIndex)] || {};
+
+      return {
+        index,
+        category:
+          card.querySelector(".smart-suggestion-category")?.value || "Other",
+        title:
+          card.querySelector(".smart-suggestion-title")?.value.trim() || "Untitled",
+        note:
+          card.querySelector(".smart-suggestion-note")?.value.trim() || "",
+        priority:
+          card.querySelector(".smart-suggestion-priority")?.value || "Normal",
+        visibleUntil:
+          card.querySelector(".smart-suggestion-date")?.value || "",
+        carryForward:
+          Boolean(card.querySelector(".smart-suggestion-carry")?.checked),
+        originalText: original.originalText || ""
+      };
+    })
+    .filter(item => item.title && item.note);
+}
+
+async function addSmartSuggestionsToRollCall() {
+  if (!currentRollCallId) {
+    alert("Open a Roll Call before importing an email.");
+    return;
+  }
+
+  const selected = collectSmartSuggestionsFromScreen();
+
+  if (!selected.length) {
+    alert("Select at least one topic.");
+    return;
+  }
+
+  const source =
+    document.getElementById("smartEmailSource")?.value.trim() ||
+    "Command Email";
+
+  const sourceDate =
+    document.getElementById("smartEmailSourceDate")?.value ||
+    getRollCallLocalDate();
+
+  const store = await getRollCallStore();
+  const rollCall = findRollCall(store, currentRollCallId);
+
+  if (!rollCall) {
+    alert("Roll Call not found.");
+    return;
+  }
+
+  selected.forEach(item => {
+    let section = (rollCall.sections || [])
+      .find(section => section.name === item.category);
+
+    if (!section) {
+      section = {
+        id: crypto.randomUUID(),
+        name: item.category,
+        items: []
+      };
+
+      rollCall.sections.push(section);
+    }
+
+    section.items.push({
+      id: crypto.randomUUID(),
+      title: item.title,
+      note: item.note,
+      priority: item.priority,
+      carryForward: item.carryForward,
+      visibleUntil: item.visibleUntil,
+      source,
+      sourceDate,
+      originalText: item.originalText,
+      updatedAt: new Date().toISOString()
+    });
+  });
+
+  rollCall.updatedAt = new Date().toISOString();
+
+  await updateRecord("employees", store);
+  closeSmartEmailImport();
+  await openRollCallEditor(rollCall.id);
+}
+
+function createSmartImportTitle(text) {
+  const cleaned = String(text || "").replace(/\s+/g, " ").trim();
+  const firstSentence = cleaned.split(/[.!?]/)[0].trim();
+  const words = firstSentence.split(" ").slice(0, 8).join(" ");
+
+  if (!words) return "Imported Email Topic";
+  return words.length > 60 ? `${words.slice(0, 57)}...` : words;
+}
+
+function simplifySmartImportText(text) {
+  return String(text || "")
+    .replace(/^(please|personnel are reminded to|all personnel should|supervisors should)\s+/i, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function inferSmartImportPriority(text) {
+  const lower = String(text || "").toLowerCase();
+
+  if (
+    /critical|immediate|urgent|officer safety|must immediately|do not approach|armed/i.test(lower)
+  ) {
+    return "Critical";
+  }
+
+  if (
+    /required|deadline|due|must|high priority|important|no later than/i.test(lower)
+  ) {
+    return "High";
+  }
+
+  return "Normal";
+}
+
+function extractSmartImportDate(text) {
+  const value = String(text || "");
+
+  const isoMatch = value.match(/\b(20\d{2})-(\d{2})-(\d{2})\b/);
+  if (isoMatch) return isoMatch[0];
+
+  const monthMap = {
+    january: 1,
+    february: 2,
+    march: 3,
+    april: 4,
+    may: 5,
+    june: 6,
+    july: 7,
+    august: 8,
+    september: 9,
+    october: 10,
+    november: 11,
+    december: 12
+  };
+
+  const wordMatch = value.match(
+    /\b(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2})(?:,\s*(20\d{2}))?/i
+  );
+
+  if (wordMatch) {
+    const month = monthMap[wordMatch[1].toLowerCase()];
+    const day = Number(wordMatch[2]);
+    let year = wordMatch[3]
+      ? Number(wordMatch[3])
+      : new Date().getFullYear();
+
+    const candidate = new Date(year, month - 1, day);
+
+    if (!wordMatch[3] && candidate < new Date()) {
+      year += 1;
+    }
+
+    return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  }
+
+  const numericMatch = value.match(
+    /\b(\d{1,2})\/(\d{1,2})(?:\/(20\d{2}|\d{2}))?\b/
+  );
+
+  if (numericMatch) {
+    const month = Number(numericMatch[1]);
+    const day = Number(numericMatch[2]);
+
+    let year = numericMatch[3]
+      ? Number(
+          numericMatch[3].length === 2
+            ? `20${numericMatch[3]}`
+            : numericMatch[3]
+        )
+      : new Date().getFullYear();
+
+    const candidate = new Date(year, month - 1, day);
+
+    if (!numericMatch[3] && candidate < new Date()) {
+      year += 1;
+    }
+
+    return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  }
+
+  return "";
+}
+
+function calculateSmartImportSimilarity(first, second) {
+  const tokenize = value =>
+    new Set(
+      String(value || "")
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, " ")
+        .split(/\s+/)
+        .filter(word => word.length > 2)
+    );
+
+  const firstTokens = tokenize(first);
+  const secondTokens = tokenize(second);
+
+  if (!firstTokens.size || !secondTokens.size) return 0;
+
+  let overlap = 0;
+
+  firstTokens.forEach(token => {
+    if (secondTokens.has(token)) overlap++;
+  });
+
+  return overlap / Math.min(firstTokens.size, secondTokens.size);
 }
