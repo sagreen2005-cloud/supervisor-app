@@ -852,3 +852,99 @@ button:hover {
     grid-column: auto;
   }
 }
+/* Employee 360 clickable summary cards — v22.3 */
+.employee-360-stat-link {
+  width: 100%;
+  min-width: 0;
+  text-align: left;
+  cursor: pointer;
+  position: relative;
+  color: inherit;
+}
+
+.employee-360-stat-link:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.employee-360-stat-link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.employee-360-card-action {
+  margin-top: 8px;
+  color: var(--text-muted);
+  font-size: 10px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.employee-360-stat-link:hover .employee-360-card-action,
+.employee-360-stat-link:focus-visible .employee-360-card-action {
+  opacity: 1;
+}
+
+.employee-360-detail-panel {
+  margin-top: 12px;
+}
+
+.employee-360-detail-panel[hidden] {
+  display: none;
+}
+
+.employee-360-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.employee-360-close {
+  width: 34px;
+  min-width: 34px;
+  height: 34px;
+  padding: 0;
+  font-size: 22px;
+}
+
+.employee-360-detail-list {
+  display: grid;
+  gap: 9px;
+}
+
+.employee-360-detail-item {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 11px;
+}
+
+.employee-360-detail-item-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.employee-360-detail-item-header span,
+.employee-360-detail-meta {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.employee-360-detail-item p {
+  margin: 8px 0 0;
+  white-space: pre-wrap;
+}
+
+.employee-360-recent-item {
+  width: 100%;
+  display: block;
+  text-align: left;
+  color: inherit;
+}
+
+.employee-360-recent-item:hover {
+  border-color: var(--accent);
+}
