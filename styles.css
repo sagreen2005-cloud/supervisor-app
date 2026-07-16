@@ -948,3 +948,29 @@ button:hover {
 .employee-360-recent-item:hover {
   border-color: var(--accent);
 }
+/* Timeline note-entry layout */
+.timeline-note-entry {
+  margin: 14px 0 18px;
+  padding: 14px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.timeline-note-entry h4 {
+  margin: 0 0 10px;
+}
+
+.timeline-note-entry textarea {
+  min-height: 110px;
+  margin-top: 10px;
+}
+
+.timeline-note-entry button {
+  width: auto;
+  margin-top: 10px;
+}
+
+.timeline-review-tools {
+  margin-bottom: 14px;
+}
