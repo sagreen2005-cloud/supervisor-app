@@ -1702,3 +1702,203 @@ button:hover {
     grid-template-columns: repeat(7, 130px);
   }
 }
+
+
+/* Department Identity and document branding */
+.branding-settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.branding-color-field {
+  display: grid;
+  gap: 4px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.branding-color-field input {
+  height: 42px;
+  padding: 4px;
+}
+
+.branding-image-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 10px;
+  margin: 13px 0;
+}
+
+.branding-image-card {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 11px;
+}
+
+.branding-image-preview {
+  height: 115px;
+  display: grid;
+  place-items: center;
+  background: var(--bg-card);
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  margin: 9px 0;
+  overflow: hidden;
+}
+
+.branding-image-preview img {
+  max-width: 100%;
+  max-height: 105px;
+  object-fit: contain;
+}
+
+.branding-image-card button {
+  width: auto;
+  min-width: 0;
+}
+
+#brandingPreview {
+  background: white;
+  color: #111827;
+  padding: 22px;
+  overflow-x: auto;
+}
+
+.department-app-brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-right: 18px;
+  padding-right: 18px;
+  border-right: 1px solid var(--border);
+}
+
+.department-app-brand img {
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+}
+
+.department-app-brand strong,
+.department-app-brand span {
+  display: block;
+}
+
+.department-app-brand strong {
+  font-size: 13px;
+}
+
+.department-app-brand span {
+  color: var(--text-muted);
+  font-size: 10px;
+  margin-top: 2px;
+}
+
+.department-letterhead {
+  border-bottom: 1px solid #111;
+  padding-bottom: 8px;
+  margin-bottom: 18px;
+}
+
+.department-letterhead-main {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) minmax(320px, 2.5fr) minmax(120px, 1fr);
+  align-items: center;
+  gap: 12px;
+}
+
+.department-letterhead-side {
+  font-family: Georgia, serif;
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.department-letterhead-side strong,
+.department-letterhead-side span {
+  display: block;
+}
+
+.department-letterhead-side.right {
+  text-align: right;
+}
+
+.department-letterhead-center {
+  text-align: center;
+}
+
+.department-letterhead-images {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+.department-letterhead-badge {
+  max-height: 88px;
+  max-width: 88px;
+}
+
+.department-letterhead-wordmark {
+  max-height: 72px;
+  max-width: 330px;
+}
+
+.department-letterhead-secondary {
+  max-height: 70px;
+  max-width: 100px;
+}
+
+.department-letterhead-department {
+  font-size: 23px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.department-letterhead-subtitle {
+  font-size: 11px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  margin-top: 3px;
+}
+
+.department-letterhead-precinct {
+  font-family: Georgia, serif;
+  font-size: 19px;
+  font-weight: 700;
+  margin-top: 8px;
+}
+
+.department-letterhead-contact {
+  border-top: 1px solid #333;
+  padding-top: 5px;
+  margin-top: 8px;
+  text-align: center;
+  font-family: Georgia, serif;
+  font-size: 9px;
+}
+
+.department-document-title {
+  font-size: 22px;
+  text-align: center;
+  margin: 16px 0 0;
+}
+
+@media (max-width: 850px) {
+  .department-app-brand {
+    display: none;
+  }
+
+  .department-letterhead-main {
+    grid-template-columns: 1fr;
+  }
+
+  .department-letterhead-side,
+  .department-letterhead-side.right {
+    text-align: center;
+  }
+}
