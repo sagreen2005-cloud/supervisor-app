@@ -4,11 +4,9 @@ async function loadDashboard() {
 
   const workingToday = [];
   const openTasks = [];
-  const recentActivity = [];
 
   employees.forEach(employee => {
     const schedule = employee.schedule || [];
-    const activity = employee.activity || [];
     const tasks = employee.tasks || [];
 
     let unavailable = false;
@@ -41,14 +39,6 @@ async function loadDashboard() {
       }
     });
 
-    activity.forEach((item, activityIndex) => {
-      recentActivity.push({
-        ...item,
-        employeeId: employee.id,
-        employeeName: formatEmployeeName(employee),
-        activityIndex
-      });
-    });
   });
 
   workingToday.sort(sortEmployees);
@@ -60,12 +50,12 @@ async function loadDashboard() {
     return aDate.localeCompare(bDate);
   });
 
-  recentActivity.sort((a, b) => {
-    return new Date(b.date || 0) - new Date(a.date || 0);
-  });
 
   window.dashboardWorkingToday = workingToday;
   window.dashboardEmployees = employees;
+  const dashboardWeek = buildDashboardWeek(employees);
+  window.dashboardWeek = dashboardWeek;
+
 
   document.getElementById("content").innerHTML = `
     <div class="compact-dashboard-header">
@@ -134,16 +124,17 @@ async function loadDashboard() {
         </div>
       </section>
 
-      <section class="card dashboard-panel">
+      <section class="card dashboard-panel dashboard-week-panel">
         <div class="dashboard-panel-header">
           <div>
-            <h3>Recent Activity</h3>
-            <p>Click an entry to review or update it</p>
+            <h3>This Week</h3>
+            <p>${escapeDashboardHtml(dashboardWeek.label)}</p>
           </div>
+          <button class="text-button" onclick="loadCalendarPage()">Open Calendar</button>
         </div>
 
-        <div class="dashboard-list">
-          ${renderRecentActivity(recentActivity.slice(0, 8))}
+        <div class="dashboard-week-view">
+          ${renderDashboardWeek(dashboardWeek.days)}
         </div>
       </section>
     </div>
@@ -180,22 +171,124 @@ function renderDashboardTasks(tasks) {
   `).join("");
 }
 
-function renderRecentActivity(items) {
-  if (!items.length) {
-    return `<p class="muted dashboard-empty">No recent activity.</p>`;
+function buildDashboardWeek(employees) {
+  const today = new Date();
+  const start = new Date(today);
+  start.setDate(today.getDate() - today.getDay());
+  start.setHours(0, 0, 0, 0);
+
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6);
+
+  const days = [];
+
+  for (let offset = 0; offset < 7; offset++) {
+    const date = new Date(start);
+    date.setDate(start.getDate() + offset);
+
+    days.push({
+      dateString: getLocalDateString(date),
+      dayName: date.toLocaleDateString(undefined, { weekday: "short" }),
+      dayNumber: date.getDate(),
+      isToday: getLocalDateString(date) === getLocalDateString(today),
+      entries: []
+    });
   }
 
-  return items.map(item => `
-    <button class="dashboard-list-item" onclick="openDashboardActivity(${item.employeeId})">
-      <span class="dashboard-list-icon">${getActivityIcon(item.type)}</span>
-      <span class="dashboard-list-copy">
-        <strong>${escapeDashboardHtml(item.employeeName)} — ${escapeDashboardHtml(item.type || "Activity")}</strong>
-        <span>${escapeDashboardHtml(item.note || "Open employee profile to review details")}</span>
-        <small>${formatDashboardDate(item.date)}</small>
-      </span>
-      <span class="dashboard-chevron">›</span>
-    </button>
+  employees.forEach(employee => {
+    (employee.schedule || []).forEach(item => {
+      if (!item.startDate) return;
+
+      const itemStart = item.startDate;
+      const itemEnd = item.endDate || item.startDate;
+
+      days.forEach(day => {
+        if (day.dateString >= itemStart && day.dateString <= itemEnd) {
+          day.entries.push({
+            employeeId: employee.id,
+            employeeName: formatEmployeeName(employee),
+            type: item.type || "Other",
+            startTime: item.startTime || "",
+            endTime: item.endTime || "",
+            allDay: Boolean(item.allDay),
+            notes: item.notes || ""
+          });
+        }
+      });
+    });
+  });
+
+  days.forEach(day => {
+    day.entries.sort((a, b) => {
+      const aTime = a.startTime || "9999";
+      const bTime = b.startTime || "9999";
+      const timeCompare = aTime.localeCompare(bTime);
+      if (timeCompare !== 0) return timeCompare;
+      return a.employeeName.localeCompare(b.employeeName);
+    });
+  });
+
+  return {
+    label: `${start.toLocaleDateString()} - ${end.toLocaleDateString()}`,
+    days
+  };
+}
+
+function renderDashboardWeek(days) {
+  return days.map(day => `
+    <div class="dashboard-week-day ${day.isToday ? "today" : ""}">
+      <button class="dashboard-week-day-header" onclick="loadCalendarPage()">
+        <span>${escapeDashboardHtml(day.dayName)}</span>
+        <strong>${day.dayNumber}</strong>
+      </button>
+
+      <div class="dashboard-week-day-entries">
+        ${
+          day.entries.length
+            ? day.entries.map(entry => `
+              <button
+                class="dashboard-week-entry ${getDashboardScheduleClass(entry.type)}"
+                onclick="openEmployeeProfile(${entry.employeeId})"
+                title="${escapeDashboardHtml(entry.notes || entry.type)}"
+              >
+                <strong>${escapeDashboardHtml(entry.employeeName)}</strong>
+                <span>${escapeDashboardHtml(entry.type)}</span>
+                ${
+                  formatDashboardScheduleTime(entry)
+                    ? `<small>${escapeDashboardHtml(formatDashboardScheduleTime(entry))}</small>`
+                    : ""
+                }
+              </button>
+            `).join("")
+            : `<span class="dashboard-week-empty">No entries</span>`
+        }
+      </div>
+    </div>
   `).join("");
+}
+
+function formatDashboardScheduleTime(entry) {
+  if (entry.allDay) return "All Day";
+
+  const start = entry.startTime || "";
+  const end = entry.endTime || "";
+
+  if (!start && !end) return "";
+  if (start && end) return `${start}-${end}`;
+  return start || end;
+}
+
+function getDashboardScheduleClass(type) {
+  const value = String(type || "").toLowerCase();
+
+  if (value.includes("vacation")) return "schedule-vacation";
+  if (value.includes("sick")) return "schedule-sick";
+  if (value.includes("training")) return "schedule-training";
+  if (value.includes("court")) return "schedule-court";
+  if (value.includes("overtime")) return "schedule-overtime";
+  if (value.includes("holiday")) return "schedule-holiday";
+  if (value.includes("regular day off")) return "schedule-rdo";
+  return "schedule-other";
 }
 
 function renderDashboardEmployees(employees) {
