@@ -32,7 +32,6 @@ async function openEmployeeProfile(id) {
         <button onclick="showEmployeeTab('overview')">360 Summary</button>
         <button onclick="showEmployeeTab('edit')">Edit Employee</button>
         <button onclick="showEmployeeTab('timeline')">Timeline</button>
-        <button onclick="showEmployeeTab('notes')">Add Note</button>
         <button onclick="showEmployeeTab('training')">Training</button>
         <button onclick="showEmployeeTab('schedule')">Schedule</button>
         <button onclick="showEmployeeTab('files')">Files</button>
@@ -56,7 +55,6 @@ async function showEmployeeTab(tab) {
   if (tab === "overview") loadEmployee360(employee);
   if (tab === "edit") loadEditEmployeeTab(employee);
   if (tab === "timeline") loadTimelineTab(employee);
-  if (tab === "notes") loadAddNoteTab();
   if (tab === "training") loadTrainingTab(employee);
   if (tab === "schedule") loadScheduleTab(employee);
   if (tab === "files") loadEmployeeFilesTab(employee);
