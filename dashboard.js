@@ -1,19 +1,13 @@
 async function loadDashboard() {
   const employees = await getAllRecords("employees");
-  const todayString = new Date().toISOString().slice(0, 10);
+  const todayString = getLocalDateString(new Date());
 
-  let workingToday = [];
-  let vacationToday = [];
-  let sickToday = [];
-  let courtToday = [];
-  let trainingToday = [];
-  let openTasks = [];
-  let alerts = [];
-  let recentActivity = [];
+  const workingToday = [];
+  const openTasks = [];
+  const recentActivity = [];
 
   employees.forEach(employee => {
     const schedule = employee.schedule || [];
-    const training = employee.training || [];
     const activity = employee.activity || [];
     const tasks = employee.tasks || [];
 
@@ -24,20 +18,11 @@ async function loadDashboard() {
       const end = item.endDate || item.startDate;
 
       if (start && todayString >= start && todayString <= end) {
-        if (item.type === "Vacation") {
-          vacationToday.push(employee);
-          unavailable = true;
-        }
-
-        if (item.type === "Sick Leave") {
-          sickToday.push(employee);
-          unavailable = true;
-        }
-
-        if (item.type === "Court") courtToday.push(employee);
-
-        if (item.type === "Training") {
-          trainingToday.push(employee);
+        if (
+          item.type === "Vacation" ||
+          item.type === "Sick Leave" ||
+          item.type === "Training"
+        ) {
           unavailable = true;
         }
       }
@@ -45,48 +30,48 @@ async function loadDashboard() {
 
     if (!unavailable) workingToday.push(employee);
 
-    training.forEach(item => {
-      if (!item.expiresDate) return;
-
-      const today = new Date();
-      const expires = new Date(item.expiresDate);
-      const daysAway = Math.ceil((expires - today) / (1000 * 60 * 60 * 24));
-
-      if (daysAway <= 30) {
-        alerts.push({
-          name: `${employee.rank || ""} ${employee.firstName} ${employee.lastName}`.trim(),
-          text: daysAway < 0 ? `${item.name} expired` : `${item.name} expires in ${daysAway} days`,
-          critical: daysAway < 0
+    tasks.forEach((task, taskIndex) => {
+      if (!task.completed) {
+        openTasks.push({
+          ...task,
+          employeeId: employee.id,
+          employeeName: formatEmployeeName(employee),
+          taskIndex
         });
       }
     });
 
-    tasks.forEach(task => {
-      if (!task.completed) openTasks.push(task);
-    });
-
-    activity.forEach(item => {
+    activity.forEach((item, activityIndex) => {
       recentActivity.push({
+        ...item,
         employeeId: employee.id,
-        name: `${employee.firstName || ""} ${employee.lastName || ""}`.trim(),
-        type: item.type,
-        note: item.note,
-        date: item.date
+        employeeName: formatEmployeeName(employee),
+        activityIndex
       });
     });
   });
 
-  openTasks = openTasks.slice(0, 5);
-  alerts = alerts.slice(0, 5);
-  recentActivity = recentActivity
-    .sort((a, b) => new Date(b.date) - new Date(a.date))
-    .slice(0, 5);
+  workingToday.sort(sortEmployees);
+  employees.sort(sortEmployees);
+
+  openTasks.sort((a, b) => {
+    const aDate = a.dueDate || "9999-12-31";
+    const bDate = b.dueDate || "9999-12-31";
+    return aDate.localeCompare(bDate);
+  });
+
+  recentActivity.sort((a, b) => {
+    return new Date(b.date || 0) - new Date(a.date || 0);
+  });
+
+  window.dashboardWorkingToday = workingToday;
+  window.dashboardEmployees = employees;
 
   document.getElementById("content").innerHTML = `
     <div class="compact-dashboard-header">
       <div>
         <h2>Supervisor Dashboard</h2>
-        <p>${new Date().toLocaleDateString()} | Roll-call overview</p>
+        <p>${new Date().toLocaleDateString()} | Daily crew overview</p>
       </div>
 
       <div class="quick-actions compact-actions">
@@ -97,63 +82,225 @@ async function loadDashboard() {
       </div>
     </div>
 
-    <section class="staffing-strip">
-      <div><strong>${workingToday.length}</strong><span>Working</span></div>
-      <div><strong>${vacationToday.length}</strong><span>Vacation</span></div>
-      <div><strong>${sickToday.length}</strong><span>Sick</span></div>
-      <div><strong>${courtToday.length}</strong><span>Court</span></div>
-      <div><strong>${trainingToday.length}</strong><span>Training</span></div>
-      <div><strong>${alerts.length}</strong><span>Alerts</span></div>
-      <div><strong>${openTasks.length}</strong><span>Tasks</span></div>
+    <section class="dashboard-command-strip">
+      <button class="dashboard-command-card working-card" onclick="showWorkingToday()">
+        <span class="dashboard-command-icon">👮</span>
+        <span class="dashboard-command-number">${workingToday.length}</span>
+        <span class="dashboard-command-label">Working Today</span>
+        <span class="dashboard-command-action">View today's crew</span>
+      </button>
+
+      <button class="dashboard-command-card" onclick="loadCalendarPage()">
+        <span class="dashboard-command-icon">📅</span>
+        <span class="dashboard-command-number">${employees.length}</span>
+        <span class="dashboard-command-label">Crew Calendar</span>
+        <span class="dashboard-command-action">Open calendar</span>
+      </button>
+
+      <button class="dashboard-command-card" onclick="loadTasksPage()">
+        <span class="dashboard-command-icon">✅</span>
+        <span class="dashboard-command-number">${openTasks.length}</span>
+        <span class="dashboard-command-label">Open Tasks</span>
+        <span class="dashboard-command-action">View all tasks</span>
+      </button>
     </section>
 
-    <div class="dashboard-two-column">
-      <section class="card compact-card">
-        <h3>Out / Court / Training Today</h3>
-        ${renderCompactGroup("Vacation", vacationToday)}
-        ${renderCompactGroup("Sick", sickToday)}
-        ${renderCompactGroup("Court", courtToday)}
-        ${renderCompactGroup("Training", trainingToday)}
+    <div class="dashboard-main-grid">
+      <section class="card dashboard-panel">
+        <div class="dashboard-panel-header">
+          <div>
+            <h3>Open Tasks</h3>
+            <p>Current follow-ups and assignments</p>
+          </div>
+          <button class="text-button" onclick="loadTasksPage()">View All</button>
+        </div>
+
+        <div class="dashboard-list">
+          ${renderDashboardTasks(openTasks.slice(0, 6))}
+        </div>
       </section>
 
-      <section class="card compact-card">
-        <h3>Needs Attention</h3>
-        ${alerts.length === 0 ? `<p class="muted">No alerts.</p>` : alerts.map(a => `
-          <div class="compact-alert ${a.critical ? "critical-text" : ""}">
-            <strong>${a.name}</strong>
-            <span>${a.text}</span>
+      <section class="card dashboard-panel">
+        <div class="dashboard-panel-header">
+          <div>
+            <h3>Recent Activity</h3>
+            <p>Click an entry to review or update it</p>
           </div>
-        `).join("")}
+        </div>
+
+        <div class="dashboard-list">
+          ${renderRecentActivity(recentActivity.slice(0, 8))}
+        </div>
       </section>
 
-      <section class="card compact-card">
-        <h3>Open Tasks</h3>
-        ${openTasks.length === 0 ? `<p class="muted">No open tasks.</p>` : openTasks.map(t => `
-          <div class="compact-line">
-            <strong>${t.title}</strong>
-            <span>${t.dueDate || "No due date"} | ${t.priority || "Normal"}</span>
+      <section class="card dashboard-panel dashboard-crew-panel">
+        <div class="dashboard-panel-header">
+          <div>
+            <h3>My Employees</h3>
+            <p>One-click access to employee profiles</p>
           </div>
-        `).join("")}
-      </section>
+          <button class="text-button" onclick="loadEmployeesPage()">View All</button>
+        </div>
 
-      <section class="card compact-card">
-        <h3>Recent Activity</h3>
-        ${recentActivity.length === 0 ? `<p class="muted">No recent activity.</p>` : recentActivity.map(item => `
-          <div class="compact-line clickable" onclick="openEmployeeProfile(${item.employeeId})">
-            <strong>${item.name} — ${item.type}</strong>
-            <span>${item.note || ""}</span>
-          </div>
-        `).join("")}
+        <div class="dashboard-employee-grid">
+          ${renderDashboardEmployees(employees)}
+        </div>
       </section>
+    </div>
+
+    <div id="dashboardModal" class="dashboard-modal" onclick="closeDashboardModal(event)">
+      <div class="dashboard-modal-content" onclick="event.stopPropagation()">
+        <div class="dashboard-modal-header">
+          <div>
+            <h3 id="dashboardModalTitle">Working Today</h3>
+            <p id="dashboardModalSubtitle"></p>
+          </div>
+          <button class="modal-close-button" onclick="closeDashboardModal()">×</button>
+        </div>
+        <div id="dashboardModalBody"></div>
+      </div>
     </div>
   `;
 }
 
-function renderCompactGroup(title, list) {
-  if (!list || list.length === 0) {
-    return `<div class="compact-group"><strong>${title}</strong><span class="muted">None</span></div>`;
+function renderDashboardTasks(tasks) {
+  if (!tasks.length) {
+    return `<p class="muted dashboard-empty">No open tasks.</p>`;
   }
 
-  const names = list.map(e => `${e.rank || ""} ${e.firstName} ${e.lastName}`.trim()).join(", ");
-  return `<div class="compact-group"><strong>${title}</strong><span>${names}</span></div>`;
+  return tasks.map(task => `
+    <button class="dashboard-list-item" onclick="openDashboardTask(${task.employeeId})">
+      <span class="dashboard-list-icon">☐</span>
+      <span class="dashboard-list-copy">
+        <strong>${escapeDashboardHtml(task.title || "Untitled task")}</strong>
+        <span>${escapeDashboardHtml(task.employeeName)} · ${escapeDashboardHtml(task.dueDate || "No due date")} · ${escapeDashboardHtml(task.priority || "Normal")}</span>
+      </span>
+      <span class="dashboard-chevron">›</span>
+    </button>
+  `).join("");
+}
+
+function renderRecentActivity(items) {
+  if (!items.length) {
+    return `<p class="muted dashboard-empty">No recent activity.</p>`;
+  }
+
+  return items.map(item => `
+    <button class="dashboard-list-item" onclick="openDashboardActivity(${item.employeeId})">
+      <span class="dashboard-list-icon">${getActivityIcon(item.type)}</span>
+      <span class="dashboard-list-copy">
+        <strong>${escapeDashboardHtml(item.employeeName)} — ${escapeDashboardHtml(item.type || "Activity")}</strong>
+        <span>${escapeDashboardHtml(item.note || "Open employee profile to review details")}</span>
+        <small>${formatDashboardDate(item.date)}</small>
+      </span>
+      <span class="dashboard-chevron">›</span>
+    </button>
+  `).join("");
+}
+
+function renderDashboardEmployees(employees) {
+  if (!employees.length) {
+    return `<p class="muted dashboard-empty">No employees have been added.</p>`;
+  }
+
+  return employees.map(employee => {
+    const initials = `${employee.firstName?.[0] || ""}${employee.lastName?.[0] || ""}`.toUpperCase();
+    return `
+      <button class="dashboard-employee-button" onclick="openEmployeeProfile(${employee.id})">
+        <span class="dashboard-avatar">${escapeDashboardHtml(initials || "—")}</span>
+        <span class="dashboard-employee-copy">
+          <strong>${escapeDashboardHtml(formatEmployeeName(employee))}</strong>
+          <span>${escapeDashboardHtml(employee.assignment || employee.position || "Employee profile")}</span>
+        </span>
+      </button>
+    `;
+  }).join("");
+}
+
+function showWorkingToday() {
+  const employees = window.dashboardWorkingToday || [];
+  const modal = document.getElementById("dashboardModal");
+  const body = document.getElementById("dashboardModalBody");
+  const subtitle = document.getElementById("dashboardModalSubtitle");
+
+  subtitle.textContent = `${employees.length} employee${employees.length === 1 ? "" : "s"} available today`;
+
+  body.innerHTML = employees.length
+    ? `<div class="working-today-list">
+        ${employees.map(employee => `
+          <button class="working-today-person" onclick="openEmployeeProfile(${employee.id})">
+            <span class="working-status-dot"></span>
+            <span>
+              <strong>${escapeDashboardHtml(formatEmployeeName(employee))}</strong>
+              <small>${escapeDashboardHtml(employee.assignment || employee.position || "Working today")}</small>
+            </span>
+            <span class="dashboard-chevron">›</span>
+          </button>
+        `).join("")}
+      </div>`
+    : `<p class="muted dashboard-empty">No employees are listed as working today.</p>`;
+
+  modal.classList.add("open");
+}
+
+function closeDashboardModal(event) {
+  if (event && event.target !== event.currentTarget) return;
+  document.getElementById("dashboardModal")?.classList.remove("open");
+}
+
+function openDashboardTask(employeeId) {
+  // Tasks remain editable in the Tasks page. This opens the full task list.
+  // The employee ID is retained here for a future filtered-task view.
+  window.dashboardSelectedEmployeeId = employeeId;
+  loadTasksPage();
+}
+
+function openDashboardActivity(employeeId) {
+  // Employee profiles contain the full activity history and editing controls.
+  openEmployeeProfile(employeeId);
+}
+
+function formatEmployeeName(employee) {
+  return `${employee.rank || ""} ${employee.firstName || ""} ${employee.lastName || ""}`
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function sortEmployees(a, b) {
+  const aName = `${a.lastName || ""} ${a.firstName || ""}`.toLowerCase();
+  const bName = `${b.lastName || ""} ${b.firstName || ""}`.toLowerCase();
+  return aName.localeCompare(bName);
+}
+
+function getLocalDateString(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function formatDashboardDate(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return escapeDashboardHtml(value);
+  return date.toLocaleDateString();
+}
+
+function getActivityIcon(type) {
+  const value = String(type || "").toLowerCase();
+  if (value.includes("commend")) return "⭐";
+  if (value.includes("coach")) return "🗣️";
+  if (value.includes("discipline")) return "⚠️";
+  if (value.includes("training")) return "🎓";
+  if (value.includes("report")) return "📄";
+  return "📝";
+}
+
+function escapeDashboardHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
