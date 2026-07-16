@@ -4,8 +4,8 @@ function showPage(page) {
       loadDashboard();
       break;
 
-    case "rollcall":
-      loadrollcallPage();
+    case "rollCall":
+      loadRollCallPage();
       break;
 
     case "employees":
