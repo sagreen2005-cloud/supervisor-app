@@ -105,6 +105,20 @@ async function loadDashboard() {
       </button>
     </section>
 
+    <section class="card dashboard-panel dashboard-crew-panel dashboard-employees-top">
+      <div class="dashboard-panel-header">
+        <div>
+          <h3>My Employees</h3>
+          <p>One-click access to employee profiles</p>
+        </div>
+        <button class="text-button" onclick="loadEmployeesPage()">View All</button>
+      </div>
+
+      <div class="dashboard-employee-grid">
+        ${renderDashboardEmployees(employees)}
+      </div>
+    </section>
+
     <div class="dashboard-main-grid">
       <section class="card dashboard-panel">
         <div class="dashboard-panel-header">
@@ -130,20 +144,6 @@ async function loadDashboard() {
 
         <div class="dashboard-list">
           ${renderRecentActivity(recentActivity.slice(0, 8))}
-        </div>
-      </section>
-
-      <section class="card dashboard-panel dashboard-crew-panel">
-        <div class="dashboard-panel-header">
-          <div>
-            <h3>My Employees</h3>
-            <p>One-click access to employee profiles</p>
-          </div>
-          <button class="text-button" onclick="loadEmployeesPage()">View All</button>
-        </div>
-
-        <div class="dashboard-employee-grid">
-          ${renderDashboardEmployees(employees)}
         </div>
       </section>
     </div>
