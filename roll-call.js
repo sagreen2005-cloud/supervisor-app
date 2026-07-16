@@ -1,12 +1,12 @@
 let rollCallSearchTimer = null;
 let rollCallEditingId = null;
 
-async function loadDailyLogPage() {
-  await loadRollCallPage();
-}
-
 async function loadRollCallPage() {
-  document.getElementById("content").innerHTML = `
+  const content = document.getElementById("content");
+
+  if (!content) return;
+
+  content.innerHTML = `
     <div class="page-header">
       <div>
         <h2>Roll Call</h2>
@@ -25,6 +25,7 @@ async function loadRollCallPage() {
           <h3 id="rollCallFormTitle">New Roll Call Item</h3>
           <p class="muted">Add an update from email, command staff, personal observation, or another source.</p>
         </div>
+
         <button type="button" class="roll-call-close" onclick="closeRollCallForm()">×</button>
       </div>
 
@@ -138,7 +139,13 @@ async function loadRollCallPage() {
   document.getElementById("rollCallStatusFilter").addEventListener("change", renderRollCallItems);
   document.getElementById("rollCallPriorityFilter").addEventListener("change", renderRollCallItems);
 
-  await renderRollCallItems();
+  try {
+    await renderRollCallItems();
+  } catch (error) {
+    console.error("Roll Call failed to load:", error);
+    document.getElementById("rollCallList").innerHTML =
+      `<p class="muted">Roll Call could not be loaded. Make sure at least one employee exists.</p>`;
+  }
 }
 
 function showRollCallForm(itemId = null) {
@@ -166,33 +173,22 @@ function closeRollCallForm() {
 }
 
 function clearRollCallForm() {
-  const ids = [
+  const fields = [
     "rollCallTitle",
     "rollCallVisibleUntil",
     "rollCallSource",
     "rollCallMessage"
   ];
 
-  ids.forEach(id => {
+  fields.forEach(id => {
     const element = document.getElementById(id);
     if (element) element.value = "";
   });
 
-  if (document.getElementById("rollCallCategory")) {
-    document.getElementById("rollCallCategory").value = "Staffing";
-  }
-
-  if (document.getElementById("rollCallPriority")) {
-    document.getElementById("rollCallPriority").value = "Normal";
-  }
-
-  if (document.getElementById("rollCallAppliesTo")) {
-    document.getElementById("rollCallAppliesTo").value = "All Crew";
-  }
-
-  if (document.getElementById("rollCallPinned")) {
-    document.getElementById("rollCallPinned").checked = false;
-  }
+  document.getElementById("rollCallCategory").value = "Staffing";
+  document.getElementById("rollCallPriority").value = "Normal";
+  document.getElementById("rollCallAppliesTo").value = "All Crew";
+  document.getElementById("rollCallPinned").checked = false;
 }
 
 async function loadRollCallItemIntoForm(itemId) {
@@ -285,17 +281,10 @@ async function renderRollCallItems() {
   const store = await getRollCallStore();
   const today = getRollCallLocalDate();
 
-  const search =
-    document.getElementById("rollCallSearch")?.value.trim().toLowerCase() || "";
-
-  const categoryFilter =
-    document.getElementById("rollCallCategoryFilter")?.value || "All";
-
-  const statusFilter =
-    document.getElementById("rollCallStatusFilter")?.value || "Active";
-
-  const priorityFilter =
-    document.getElementById("rollCallPriorityFilter")?.value || "All";
+  const search = document.getElementById("rollCallSearch")?.value.trim().toLowerCase() || "";
+  const categoryFilter = document.getElementById("rollCallCategoryFilter")?.value || "All";
+  const statusFilter = document.getElementById("rollCallStatusFilter")?.value || "Active";
+  const priorityFilter = document.getElementById("rollCallPriorityFilter")?.value || "All";
 
   let items = (store.rollCallItems || []).slice();
 
@@ -318,7 +307,6 @@ async function renderRollCallItems() {
     const matchesPriority = priorityFilter === "All" || item.priority === priorityFilter;
 
     let matchesStatus = true;
-
     if (statusFilter === "Active") matchesStatus = !expired;
     if (statusFilter === "Expired") matchesStatus = expired;
     if (statusFilter === "Pinned") matchesStatus = Boolean(item.pinned);
@@ -327,9 +315,7 @@ async function renderRollCallItems() {
   });
 
   items.sort((a, b) => {
-    if (Boolean(a.pinned) !== Boolean(b.pinned)) {
-      return a.pinned ? -1 : 1;
-    }
+    if (Boolean(a.pinned) !== Boolean(b.pinned)) return a.pinned ? -1 : 1;
 
     const priorityOrder = { Critical: 0, High: 1, Normal: 2 };
     const priorityDifference =
@@ -350,12 +336,7 @@ async function renderRollCallItems() {
   const regularItems = items.filter(item => !item.pinned);
 
   list.innerHTML = `
-    ${
-      pinnedItems.length
-        ? renderRollCallSection("Pinned Items", pinnedItems, today)
-        : ""
-    }
-
+    ${pinnedItems.length ? renderRollCallSection("Pinned Items", pinnedItems, today) : ""}
     ${
       regularItems.length
         ? renderRollCallSection(
@@ -443,9 +424,7 @@ async function copyActiveRollCall() {
   const items = (store.rollCallItems || [])
     .filter(item => !isRollCallExpired(item, today))
     .sort((a, b) => {
-      if (Boolean(a.pinned) !== Boolean(b.pinned)) {
-        return a.pinned ? -1 : 1;
-      }
+      if (Boolean(a.pinned) !== Boolean(b.pinned)) return a.pinned ? -1 : 1;
 
       const priorityOrder = { Critical: 0, High: 1, Normal: 2 };
       return (priorityOrder[a.priority] ?? 3) - (priorityOrder[b.priority] ?? 3);
@@ -460,16 +439,11 @@ async function copyActiveRollCall() {
 
   items.forEach(item => {
     const category = item.category || "Other";
-
     if (!grouped.has(category)) grouped.set(category, []);
     grouped.get(category).push(item);
   });
 
-  const lines = [
-    "ROLL CALL",
-    formatRollCallHeadingDate(today),
-    ""
-  ];
+  const lines = ["ROLL CALL", formatRollCallHeadingDate(today), ""];
 
   grouped.forEach((categoryItems, category) => {
     lines.push(category.toUpperCase());
@@ -540,6 +514,7 @@ function getRollCallLocalDate() {
 
 function formatRollCallHeadingDate(value) {
   const [year, month, day] = value.split("-").map(Number);
+
   return new Date(year, month - 1, day).toLocaleDateString(undefined, {
     weekday: "long",
     year: "numeric",
