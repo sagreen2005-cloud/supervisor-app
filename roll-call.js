@@ -1,491 +1,1076 @@
+let currentRollCallId = null;
 let rollCallSearchTimer = null;
-let rollCallEditingId = null;
+
+const ROLL_CALL_TEMPLATES = {
+  "Regular Shift": [
+    "Staffing",
+    "Officer Safety",
+    "Administrative",
+    "Training",
+    "Community Information",
+    "BOLO / Intelligence",
+    "Reminders"
+  ],
+  "Holiday Shift": [
+    "Holiday Staffing",
+    "Traffic Expectations",
+    "Special Events",
+    "Officer Safety",
+    "Patrol Assignments",
+    "Community Events",
+    "Administrative"
+  ],
+  "DUI Shift": [
+    "Mission",
+    "Assignments",
+    "Hot Spots",
+    "Recent DUI Intelligence",
+    "Officer Safety",
+    "Equipment Check",
+    "Administrative",
+    "Goals"
+  ],
+  "Major Incident Review": [
+    "Incident Summary",
+    "Timeline",
+    "Resources Used",
+    "What Went Well",
+    "Needs Improvement",
+    "Lessons Learned",
+    "Training Opportunities",
+    "Follow-up Items"
+  ],
+  "Weather Incident": [
+    "Current Conditions",
+    "Road Closures",
+    "Traffic Hazards",
+    "Power Outages",
+    "Officer Safety",
+    "Resource Deployment",
+    "Special Assignments",
+    "Community Messaging"
+  ],
+  "Special Event": [
+    "Event Summary",
+    "Staffing",
+    "Traffic Plan",
+    "Community Concerns",
+    "Officer Safety",
+    "Special Assignments",
+    "Administrative"
+  ],
+  "Planned Operation": [
+    "Mission",
+    "Objectives",
+    "Assignments",
+    "Command Staff",
+    "Communications",
+    "Safety Plan",
+    "Contingencies",
+    "After Action"
+  ],
+  "Staff Meeting": [
+    "Announcements",
+    "Policy Updates",
+    "Training",
+    "Upcoming Events",
+    "Open Discussion",
+    "Action Items"
+  ],
+  "Training Day": [
+    "Training Topic",
+    "Objectives",
+    "Materials",
+    "Attendance",
+    "Scenario Notes",
+    "Follow-up"
+  ],
+  "Blank": []
+};
 
 async function loadRollCallPage() {
-  const content = document.getElementById("content");
+  currentRollCallId = null;
 
-  if (!content) return;
-
-  content.innerHTML = `
+  document.getElementById("content").innerHTML = `
     <div class="page-header">
       <div>
         <h2>Roll Call</h2>
-        <p>Create, organize, search, and reuse crew updates for the week or shift.</p>
+        <p>Create one complete briefing for each date or shift.</p>
       </div>
 
-      <div class="quick-actions">
-        <button type="button" onclick="showRollCallForm()">+ New Roll Call Item</button>
-        <button type="button" onclick="copyActiveRollCall()">Copy Active Roll Call</button>
-      </div>
+      <button type="button" onclick="showCreateRollCallForm()">+ New Roll Call</button>
     </div>
 
-    <section id="rollCallFormCard" class="card" hidden>
-      <div class="roll-call-form-header">
+    <section id="createRollCallCard" class="card" hidden>
+      <div class="roll-call-header-row">
         <div>
-          <h3 id="rollCallFormTitle">New Roll Call Item</h3>
-          <p class="muted">Add an update from email, command staff, personal observation, or another source.</p>
+          <h3>Create Roll Call</h3>
+          <p class="muted">Choose a date, shift, supervisor, and template.</p>
         </div>
-
-        <button type="button" class="roll-call-close" onclick="closeRollCallForm()">×</button>
+        <button type="button" class="roll-call-icon-button" onclick="closeCreateRollCallForm()">×</button>
       </div>
 
       <div class="form-grid">
-        <input id="rollCallDate" type="date" />
-        <input id="rollCallTitle" placeholder="Title / subject" />
+        <input id="newRollCallDate" type="date" />
 
-        <select id="rollCallCategory">
-          <option value="Staffing">Staffing</option>
-          <option value="Officer Safety">Officer Safety</option>
-          <option value="Training">Training</option>
-          <option value="Policy">Policy</option>
-          <option value="Administrative">Administrative</option>
-          <option value="DUI Squad">DUI Squad</option>
-          <option value="Events">Events</option>
-          <option value="Equipment / Facilities">Equipment / Facilities</option>
-          <option value="BOLO">BOLO</option>
-          <option value="Community">Community</option>
-          <option value="Reminder">Reminder</option>
+        <select id="newRollCallShift">
+          <option value="Graveyard">Graveyard</option>
+          <option value="Day Shift">Day Shift</option>
+          <option value="Swing Shift">Swing Shift</option>
+          <option value="Special Assignment">Special Assignment</option>
           <option value="Other">Other</option>
         </select>
 
-        <select id="rollCallPriority">
-          <option value="Normal">Normal</option>
-          <option value="High">High</option>
-          <option value="Critical">Critical</option>
+        <input id="newRollCallSupervisor" placeholder="Supervisor" />
+
+        <select id="newRollCallTemplate">
+          ${Object.keys(ROLL_CALL_TEMPLATES).map(name =>
+            `<option value="${escapeRollCallHtml(name)}">${escapeRollCallHtml(name)}</option>`
+          ).join("")}
         </select>
 
-        <select id="rollCallAppliesTo">
-          <option value="All Crew">All Crew</option>
-          <option value="Current Shift">Current Shift</option>
-          <option value="Specific Employees">Specific Employees</option>
-          <option value="Supervisors">Supervisors</option>
-          <option value="Other">Other</option>
+        <select id="newRollCallStatus">
+          <option value="Draft">Draft</option>
+          <option value="Final">Final</option>
         </select>
-
-        <input id="rollCallVisibleUntil" type="date" title="Visible until" />
-        <input id="rollCallSource" placeholder="Source: email, command staff, observation..." />
-
-        <label class="roll-call-checkbox">
-          <input id="rollCallPinned" type="checkbox" />
-          <span>Pin this item</span>
-        </label>
       </div>
 
-      <textarea
-        id="rollCallMessage"
-        placeholder="Crew update, issue seen, reminder, assignment, briefing information..."
-      ></textarea>
-
       <div class="roll-call-form-actions">
-        <button type="button" onclick="saveRollCallItem()">Save Roll Call Item</button>
-        <button type="button" class="secondary-btn" onclick="closeRollCallForm()">Cancel</button>
+        <button type="button" onclick="createRollCall()">Create Roll Call</button>
+        <button type="button" class="secondary-btn" onclick="closeCreateRollCallForm()">Cancel</button>
       </div>
     </section>
 
     <section class="card">
-      <div class="roll-call-filter-header">
+      <div class="roll-call-header-row">
         <div>
-          <h3>Roll Call Board</h3>
-          <p class="muted">Expired items remain searchable and are not deleted.</p>
+          <h3>Roll Call Library</h3>
+          <p class="muted">Search by date, shift, template, supervisor, section, title, or note.</p>
         </div>
       </div>
 
       <div class="form-grid">
-        <input id="rollCallSearch" placeholder="Search title, message, category, source, or date..." />
+        <input id="rollCallLibrarySearch" placeholder="Search roll calls..." />
 
-        <select id="rollCallCategoryFilter">
-          <option value="All">All Categories</option>
-          <option value="Staffing">Staffing</option>
-          <option value="Officer Safety">Officer Safety</option>
-          <option value="Training">Training</option>
-          <option value="Policy">Policy</option>
-          <option value="Administrative">Administrative</option>
-          <option value="DUI Squad">DUI Squad</option>
-          <option value="Events">Events</option>
-          <option value="Equipment / Facilities">Equipment / Facilities</option>
-          <option value="BOLO">BOLO</option>
-          <option value="Community">Community</option>
-          <option value="Reminder">Reminder</option>
-          <option value="Other">Other</option>
+        <select id="rollCallLibraryTemplate">
+          <option value="All">All Templates</option>
+          ${Object.keys(ROLL_CALL_TEMPLATES).map(name =>
+            `<option value="${escapeRollCallHtml(name)}">${escapeRollCallHtml(name)}</option>`
+          ).join("")}
         </select>
 
-        <select id="rollCallStatusFilter">
-          <option value="Active">Active</option>
-          <option value="All">All Items</option>
-          <option value="Expired">Expired</option>
-          <option value="Pinned">Pinned</option>
-        </select>
-
-        <select id="rollCallPriorityFilter">
-          <option value="All">All Priorities</option>
-          <option value="Critical">Critical</option>
-          <option value="High">High</option>
-          <option value="Normal">Normal</option>
+        <select id="rollCallLibraryStatus">
+          <option value="All">All Statuses</option>
+          <option value="Draft">Draft</option>
+          <option value="Final">Final</option>
         </select>
       </div>
 
-      <div id="rollCallList"></div>
+      <div id="rollCallLibrary"></div>
     </section>
   `;
 
-  document.getElementById("rollCallDate").value = getRollCallLocalDate();
+  document.getElementById("newRollCallDate").value = getRollCallLocalDate();
 
-  document.getElementById("rollCallSearch").addEventListener("input", () => {
+  document.getElementById("rollCallLibrarySearch").addEventListener("input", () => {
     clearTimeout(rollCallSearchTimer);
-    rollCallSearchTimer = setTimeout(renderRollCallItems, 150);
+    rollCallSearchTimer = setTimeout(renderRollCallLibrary, 150);
   });
 
-  document.getElementById("rollCallCategoryFilter").addEventListener("change", renderRollCallItems);
-  document.getElementById("rollCallStatusFilter").addEventListener("change", renderRollCallItems);
-  document.getElementById("rollCallPriorityFilter").addEventListener("change", renderRollCallItems);
+  document.getElementById("rollCallLibraryTemplate").addEventListener("change", renderRollCallLibrary);
+  document.getElementById("rollCallLibraryStatus").addEventListener("change", renderRollCallLibrary);
 
-  try {
-    await renderRollCallItems();
-  } catch (error) {
-    console.error("Roll Call failed to load:", error);
-    document.getElementById("rollCallList").innerHTML =
-      `<p class="muted">Roll Call could not be loaded. Make sure at least one employee exists.</p>`;
-  }
+  await renderRollCallLibrary();
 }
 
-function showRollCallForm(itemId = null) {
-  const form = document.getElementById("rollCallFormCard");
-  if (!form) return;
+function showCreateRollCallForm() {
+  const card = document.getElementById("createRollCallCard");
+  if (!card) return;
 
-  rollCallEditingId = itemId;
-  clearRollCallForm();
+  document.getElementById("newRollCallDate").value = getRollCallLocalDate();
+  document.getElementById("newRollCallShift").value = "Graveyard";
+  document.getElementById("newRollCallTemplate").value = "Regular Shift";
+  document.getElementById("newRollCallStatus").value = "Draft";
 
-  if (itemId) {
-    loadRollCallItemIntoForm(itemId);
-  } else {
-    document.getElementById("rollCallFormTitle").textContent = "New Roll Call Item";
-    document.getElementById("rollCallDate").value = getRollCallLocalDate();
-  }
-
-  form.hidden = false;
-  form.scrollIntoView({ behavior: "smooth", block: "start" });
+  card.hidden = false;
+  card.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
-function closeRollCallForm() {
-  const form = document.getElementById("rollCallFormCard");
-  if (form) form.hidden = true;
-  rollCallEditingId = null;
+function closeCreateRollCallForm() {
+  const card = document.getElementById("createRollCallCard");
+  if (card) card.hidden = true;
 }
 
-function clearRollCallForm() {
-  const fields = [
-    "rollCallTitle",
-    "rollCallVisibleUntil",
-    "rollCallSource",
-    "rollCallMessage"
-  ];
-
-  fields.forEach(id => {
-    const element = document.getElementById(id);
-    if (element) element.value = "";
-  });
-
-  document.getElementById("rollCallCategory").value = "Staffing";
-  document.getElementById("rollCallPriority").value = "Normal";
-  document.getElementById("rollCallAppliesTo").value = "All Crew";
-  document.getElementById("rollCallPinned").checked = false;
-}
-
-async function loadRollCallItemIntoForm(itemId) {
-  const store = await getRollCallStore();
-  const item = (store.rollCallItems || []).find(entry => entry.id === itemId);
-
-  if (!item) {
-    alert("Roll call item not found.");
-    closeRollCallForm();
-    return;
-  }
-
-  document.getElementById("rollCallFormTitle").textContent = "Edit Roll Call Item";
-  document.getElementById("rollCallDate").value = item.date || getRollCallLocalDate();
-  document.getElementById("rollCallTitle").value = item.title || "";
-  document.getElementById("rollCallCategory").value = item.category || "Other";
-  document.getElementById("rollCallPriority").value = item.priority || "Normal";
-  document.getElementById("rollCallAppliesTo").value = item.appliesTo || "All Crew";
-  document.getElementById("rollCallVisibleUntil").value = item.visibleUntil || "";
-  document.getElementById("rollCallSource").value = item.source || "";
-  document.getElementById("rollCallPinned").checked = Boolean(item.pinned);
-  document.getElementById("rollCallMessage").value = item.message || "";
-}
-
-async function saveRollCallItem() {
-  const title = document.getElementById("rollCallTitle").value.trim();
-  const message = document.getElementById("rollCallMessage").value.trim();
-  const date = document.getElementById("rollCallDate").value;
-
-  if (!title) {
-    alert("Enter a title.");
-    return;
-  }
-
-  if (!message) {
-    alert("Enter the roll call update.");
-    return;
-  }
+async function createRollCall() {
+  const date = document.getElementById("newRollCallDate").value;
+  const shift = document.getElementById("newRollCallShift").value;
+  const supervisor = document.getElementById("newRollCallSupervisor").value.trim();
+  const template = document.getElementById("newRollCallTemplate").value;
+  const status = document.getElementById("newRollCallStatus").value;
 
   if (!date) {
     alert("Select a date.");
     return;
   }
 
-  const store = await getRollCallStore();
-  if (!store.rollCallItems) store.rollCallItems = [];
-
-  const now = new Date().toISOString();
-
-  const item = {
-    id: rollCallEditingId || crypto.randomUUID(),
-    date,
-    title,
-    category: document.getElementById("rollCallCategory").value,
-    priority: document.getElementById("rollCallPriority").value,
-    appliesTo: document.getElementById("rollCallAppliesTo").value,
-    visibleUntil: document.getElementById("rollCallVisibleUntil").value,
-    source: document.getElementById("rollCallSource").value.trim(),
-    pinned: document.getElementById("rollCallPinned").checked,
-    message,
-    createdAt: now,
-    updatedAt: now
-  };
-
-  if (rollCallEditingId) {
-    const index = store.rollCallItems.findIndex(entry => entry.id === rollCallEditingId);
-
-    if (index === -1) {
-      alert("Roll call item not found.");
-      return;
-    }
-
-    item.createdAt = store.rollCallItems[index].createdAt || now;
-    store.rollCallItems[index] = item;
-  } else {
-    store.rollCallItems.push(item);
-  }
-
-  store.updatedAt = now;
-  await updateRecord("employees", store);
-
-  closeRollCallForm();
-  await renderRollCallItems();
-}
-
-async function renderRollCallItems() {
-  const list = document.getElementById("rollCallList");
-  if (!list) return;
-
-  const store = await getRollCallStore();
-  const today = getRollCallLocalDate();
-
-  const search = document.getElementById("rollCallSearch")?.value.trim().toLowerCase() || "";
-  const categoryFilter = document.getElementById("rollCallCategoryFilter")?.value || "All";
-  const statusFilter = document.getElementById("rollCallStatusFilter")?.value || "Active";
-  const priorityFilter = document.getElementById("rollCallPriorityFilter")?.value || "All";
-
-  let items = (store.rollCallItems || []).slice();
-
-  items = items.filter(item => {
-    const expired = isRollCallExpired(item, today);
-
-    const searchableText = [
-      item.date,
-      item.title,
-      item.category,
-      item.priority,
-      item.appliesTo,
-      item.visibleUntil,
-      item.source,
-      item.message
-    ].join(" ").toLowerCase();
-
-    const matchesSearch = searchableText.includes(search);
-    const matchesCategory = categoryFilter === "All" || item.category === categoryFilter;
-    const matchesPriority = priorityFilter === "All" || item.priority === priorityFilter;
-
-    let matchesStatus = true;
-    if (statusFilter === "Active") matchesStatus = !expired;
-    if (statusFilter === "Expired") matchesStatus = expired;
-    if (statusFilter === "Pinned") matchesStatus = Boolean(item.pinned);
-
-    return matchesSearch && matchesCategory && matchesPriority && matchesStatus;
-  });
-
-  items.sort((a, b) => {
-    if (Boolean(a.pinned) !== Boolean(b.pinned)) return a.pinned ? -1 : 1;
-
-    const priorityOrder = { Critical: 0, High: 1, Normal: 2 };
-    const priorityDifference =
-      (priorityOrder[a.priority] ?? 3) - (priorityOrder[b.priority] ?? 3);
-
-    if (priorityDifference !== 0) return priorityDifference;
-
-    return String(b.date || b.createdAt || "")
-      .localeCompare(String(a.date || a.createdAt || ""));
-  });
-
-  if (!items.length) {
-    list.innerHTML = `<p class="muted roll-call-empty">No matching roll call items found.</p>`;
+  if (!supervisor) {
+    alert("Enter the supervisor.");
     return;
   }
 
-  const pinnedItems = items.filter(item => item.pinned);
-  const regularItems = items.filter(item => !item.pinned);
+  const store = await getRollCallStore();
+  const duplicate = (store.rollCalls || []).find(item =>
+    item.date === date && item.shift === shift
+  );
 
-  list.innerHTML = `
-    ${pinnedItems.length ? renderRollCallSection("Pinned Items", pinnedItems, today) : ""}
-    ${
-      regularItems.length
-        ? renderRollCallSection(
-            statusFilter === "Expired" ? "Expired Items" : "Roll Call Items",
-            regularItems,
-            today
-          )
-        : ""
+  if (duplicate) {
+    const openExisting = confirm(
+      "A roll call already exists for this date and shift. Open it?"
+    );
+
+    if (openExisting) {
+      await openRollCallEditor(duplicate.id);
     }
+
+    return;
+  }
+
+  const now = new Date().toISOString();
+
+  const rollCall = {
+    id: crypto.randomUUID(),
+    date,
+    shift,
+    supervisor,
+    template,
+    status,
+    createdAt: now,
+    updatedAt: now,
+    sections: (ROLL_CALL_TEMPLATES[template] || []).map(name => ({
+      id: crypto.randomUUID(),
+      name,
+      items: []
+    }))
+  };
+
+  if (!store.rollCalls) store.rollCalls = [];
+  store.rollCalls.push(rollCall);
+  store.updatedAt = now;
+
+  await updateRecord("employees", store);
+  await openRollCallEditor(rollCall.id);
+}
+
+async function renderRollCallLibrary() {
+  const library = document.getElementById("rollCallLibrary");
+  if (!library) return;
+
+  const store = await getRollCallStore();
+  const search = document.getElementById("rollCallLibrarySearch")?.value.trim().toLowerCase() || "";
+  const templateFilter = document.getElementById("rollCallLibraryTemplate")?.value || "All";
+  const statusFilter = document.getElementById("rollCallLibraryStatus")?.value || "All";
+
+  let rollCalls = (store.rollCalls || []).slice();
+
+  rollCalls = rollCalls.filter(rollCall => {
+    const text = [
+      rollCall.date,
+      rollCall.shift,
+      rollCall.supervisor,
+      rollCall.template,
+      rollCall.status,
+      ...(rollCall.sections || []).flatMap(section => [
+        section.name,
+        ...(section.items || []).flatMap(item => [
+          item.title,
+          item.note,
+          item.priority
+        ])
+      ])
+    ].join(" ").toLowerCase();
+
+    const matchesSearch = text.includes(search);
+    const matchesTemplate =
+      templateFilter === "All" || rollCall.template === templateFilter;
+    const matchesStatus =
+      statusFilter === "All" || rollCall.status === statusFilter;
+
+    return matchesSearch && matchesTemplate && matchesStatus;
+  });
+
+  rollCalls.sort((a, b) => {
+    const dateCompare = String(b.date || "").localeCompare(String(a.date || ""));
+    if (dateCompare !== 0) return dateCompare;
+    return String(b.updatedAt || "").localeCompare(String(a.updatedAt || ""));
+  });
+
+  if (!rollCalls.length) {
+    library.innerHTML = `<p class="muted roll-call-empty">No roll calls found.</p>`;
+    return;
+  }
+
+  library.innerHTML = `
+    <div class="roll-call-library-grid">
+      ${rollCalls.map(rollCall => {
+        const topicCount = (rollCall.sections || [])
+          .reduce((total, section) => total + (section.items || []).length, 0);
+
+        return `
+          <button type="button" class="roll-call-library-card" onclick="openRollCallEditor('${rollCall.id}')">
+            <div class="roll-call-library-card-top">
+              <span class="roll-call-status ${String(rollCall.status || "Draft").toLowerCase()}">
+                ${escapeRollCallHtml(rollCall.status || "Draft")}
+              </span>
+              <span>${escapeRollCallHtml(rollCall.template || "Blank")}</span>
+            </div>
+
+            <h3>${escapeRollCallHtml(formatRollCallDisplayDate(rollCall.date))}</h3>
+            <p>${escapeRollCallHtml(rollCall.shift || "Shift")}</p>
+            <p class="muted">Supervisor: ${escapeRollCallHtml(rollCall.supervisor || "N/A")}</p>
+            <p class="muted">${topicCount} topic${topicCount === 1 ? "" : "s"}</p>
+          </button>
+        `;
+      }).join("")}
+    </div>
   `;
 }
 
-function renderRollCallSection(title, items, today) {
-  return `
-    <div class="roll-call-section">
-      <h3>${escapeRollCallHtml(title)}</h3>
-      <div class="roll-call-items">
-        ${items.map(item => renderRollCallCard(item, today)).join("")}
+async function openRollCallEditor(rollCallId) {
+  const store = await getRollCallStore();
+  const rollCall = (store.rollCalls || []).find(item => item.id === rollCallId);
+
+  if (!rollCall) {
+    alert("Roll call not found.");
+    return;
+  }
+
+  currentRollCallId = rollCallId;
+
+  document.getElementById("content").innerHTML = `
+    <button type="button" onclick="loadRollCallPage()">← Back to Roll Call Library</button>
+
+    <section class="card">
+      <div class="roll-call-editor-heading">
+        <div>
+          <h2>${escapeRollCallHtml(formatRollCallDisplayDate(rollCall.date))}</h2>
+          <p class="muted">
+            ${escapeRollCallHtml(rollCall.shift || "Shift")}
+            · ${escapeRollCallHtml(rollCall.template || "Blank")}
+            · Supervisor: ${escapeRollCallHtml(rollCall.supervisor || "N/A")}
+          </p>
+        </div>
+
+        <div class="roll-call-editor-actions">
+          <button type="button" onclick="downloadRollCallPdf('${rollCall.id}')">Download PDF</button>
+          <button type="button" onclick="copyRollCallText('${rollCall.id}')">Copy Text</button>
+          <button type="button" onclick="showCarryForwardDialog('${rollCall.id}')">Carry Forward</button>
+          <button type="button" class="danger-btn" onclick="deleteRollCall('${rollCall.id}')">Delete</button>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <input id="editRollCallDate" type="date" value="${escapeRollCallHtml(rollCall.date || "")}" />
+
+        <select id="editRollCallShift">
+          ${["Graveyard", "Day Shift", "Swing Shift", "Special Assignment", "Other"]
+            .map(value => `<option value="${value}" ${rollCall.shift === value ? "selected" : ""}>${value}</option>`)
+            .join("")}
+        </select>
+
+        <input id="editRollCallSupervisor" value="${escapeRollCallHtml(rollCall.supervisor || "")}" />
+
+        <select id="editRollCallStatus">
+          <option value="Draft" ${rollCall.status === "Draft" ? "selected" : ""}>Draft</option>
+          <option value="Final" ${rollCall.status === "Final" ? "selected" : ""}>Final</option>
+        </select>
+      </div>
+
+      <button type="button" onclick="saveRollCallHeader()">Save Roll Call Details</button>
+    </section>
+
+    <section class="card">
+      <div class="roll-call-header-row">
+        <div>
+          <h3>Briefing Sections</h3>
+          <p class="muted">Add topics to the appropriate section.</p>
+        </div>
+
+        <button type="button" onclick="addRollCallSection()">+ Add Section</button>
+      </div>
+
+      <div id="rollCallSections">
+        ${renderRollCallSections(rollCall)}
+      </div>
+    </section>
+
+    <div id="rollCallModal" class="roll-call-modal" onclick="closeRollCallModal(event)">
+      <div class="roll-call-modal-content" onclick="event.stopPropagation()">
+        <div class="roll-call-header-row">
+          <div>
+            <h3 id="rollCallModalTitle">Add Topic</h3>
+            <p id="rollCallModalSubtitle" class="muted"></p>
+          </div>
+          <button type="button" class="roll-call-icon-button" onclick="closeRollCallModal()">×</button>
+        </div>
+
+        <input id="rollCallModalSectionId" type="hidden" />
+        <input id="rollCallModalItemId" type="hidden" />
+
+        <div class="form-grid">
+          <input id="rollCallItemTitle" placeholder="Topic title" />
+
+          <select id="rollCallItemPriority">
+            <option value="Normal">Normal</option>
+            <option value="High">High</option>
+            <option value="Critical">Critical</option>
+          </select>
+
+          <label class="roll-call-checkbox">
+            <input id="rollCallItemCarryForward" type="checkbox" />
+            <span>Eligible to carry forward</span>
+          </label>
+        </div>
+
+        <textarea id="rollCallItemNote" placeholder="Briefing note..."></textarea>
+
+        <div class="roll-call-form-actions">
+          <button type="button" onclick="saveRollCallTopic()">Save Topic</button>
+          <button type="button" class="secondary-btn" onclick="closeRollCallModal()">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="carryForwardModal" class="roll-call-modal" onclick="closeCarryForwardDialog(event)">
+      <div class="roll-call-modal-content" onclick="event.stopPropagation()">
+        <div class="roll-call-header-row">
+          <div>
+            <h3>Carry Forward</h3>
+            <p class="muted">Create a new roll call and copy selected topics.</p>
+          </div>
+          <button type="button" class="roll-call-icon-button" onclick="closeCarryForwardDialog()">×</button>
+        </div>
+
+        <div class="form-grid">
+          <input id="carryForwardDate" type="date" />
+          <select id="carryForwardShift">
+            <option value="Graveyard">Graveyard</option>
+            <option value="Day Shift">Day Shift</option>
+            <option value="Swing Shift">Swing Shift</option>
+            <option value="Special Assignment">Special Assignment</option>
+            <option value="Other">Other</option>
+          </select>
+          <input id="carryForwardSupervisor" placeholder="Supervisor" />
+        </div>
+
+        <div id="carryForwardItems"></div>
+
+        <button type="button" onclick="createCarryForwardRollCall()">Create Roll Call</button>
       </div>
     </div>
   `;
 }
 
-function renderRollCallCard(item, today) {
-  const expired = isRollCallExpired(item, today);
+function renderRollCallSections(rollCall) {
+  if (!(rollCall.sections || []).length) {
+    return `<p class="muted">No sections yet. Add a section to begin.</p>`;
+  }
 
-  return `
-    <article class="roll-call-card ${item.pinned ? "roll-call-pinned" : ""} ${expired ? "roll-call-expired" : ""}">
-      <div class="roll-call-card-header">
+  return rollCall.sections.map(section => `
+    <section class="roll-call-section-card">
+      <div class="roll-call-section-heading">
         <div>
-          <div class="roll-call-badges">
-            ${item.pinned ? `<span class="roll-call-badge pinned">Pinned</span>` : ""}
-            <span class="roll-call-badge">${escapeRollCallHtml(item.category || "Other")}</span>
-            <span class="roll-call-badge priority-${String(item.priority || "Normal").toLowerCase()}">
-              ${escapeRollCallHtml(item.priority || "Normal")}
-            </span>
-            ${expired ? `<span class="roll-call-badge expired">Expired</span>` : ""}
-          </div>
-
-          <h3>${escapeRollCallHtml(item.title || "Untitled")}</h3>
-          <p class="muted">
-            ${escapeRollCallHtml(item.date || "No date")}
-            · ${escapeRollCallHtml(item.appliesTo || "All Crew")}
-            ${item.source ? ` · Source: ${escapeRollCallHtml(item.source)}` : ""}
-          </p>
+          <h3>${escapeRollCallHtml(section.name)}</h3>
+          <p class="muted">${(section.items || []).length} topic${(section.items || []).length === 1 ? "" : "s"}</p>
         </div>
 
-        <div class="roll-call-card-actions">
-          <button type="button" onclick="showRollCallForm('${item.id}')">Edit</button>
-          <button type="button" class="danger-btn" onclick="removeRollCallItem('${item.id}')">Remove</button>
+        <div class="roll-call-section-actions">
+          <button type="button" onclick="openRollCallTopicModal('${section.id}')">+ Add Topic</button>
+          <button type="button" class="danger-btn" onclick="removeRollCallSection('${section.id}')">Remove Section</button>
         </div>
       </div>
 
-      <p class="roll-call-message">${escapeRollCallHtml(item.message || "")}</p>
+      <div class="roll-call-topic-list">
+        ${
+          !(section.items || []).length
+            ? `<p class="muted">No topics in this section.</p>`
+            : section.items.map(item => `
+              <article class="roll-call-topic-card priority-${String(item.priority || "Normal").toLowerCase()}">
+                <div class="roll-call-topic-heading">
+                  <div>
+                    <strong>${escapeRollCallHtml(item.title || "Untitled")}</strong>
+                    <span>${escapeRollCallHtml(item.priority || "Normal")}</span>
+                  </div>
 
-      ${
-        item.visibleUntil
-          ? `<p class="muted roll-call-expiration">Visible until: ${escapeRollCallHtml(item.visibleUntil)}</p>`
-          : ""
-      }
-    </article>
-  `;
+                  <div class="roll-call-topic-actions">
+                    <button type="button" onclick="openRollCallTopicModal('${section.id}', '${item.id}')">Edit</button>
+                    <button type="button" class="danger-btn" onclick="removeRollCallTopic('${section.id}', '${item.id}')">Remove</button>
+                  </div>
+                </div>
+
+                <p>${escapeRollCallHtml(item.note || "")}</p>
+
+                ${
+                  item.carryForward
+                    ? `<small class="muted">Carry-forward eligible</small>`
+                    : ""
+                }
+              </article>
+            `).join("")
+        }
+      </div>
+    </section>
+  `).join("");
 }
 
-async function removeRollCallItem(itemId) {
-  if (!confirm("Remove this roll call item?")) return;
-
+async function saveRollCallHeader() {
   const store = await getRollCallStore();
-  if (!store.rollCallItems) return;
+  const rollCall = findRollCall(store, currentRollCallId);
+  if (!rollCall) return;
 
-  const index = store.rollCallItems.findIndex(item => item.id === itemId);
-  if (index === -1) return;
+  rollCall.date = document.getElementById("editRollCallDate").value;
+  rollCall.shift = document.getElementById("editRollCallShift").value;
+  rollCall.supervisor = document.getElementById("editRollCallSupervisor").value.trim();
+  rollCall.status = document.getElementById("editRollCallStatus").value;
+  rollCall.updatedAt = new Date().toISOString();
 
-  store.rollCallItems.splice(index, 1);
-  store.updatedAt = new Date().toISOString();
-
-  await updateRecord("employees", store);
-  await renderRollCallItems();
-}
-
-async function copyActiveRollCall() {
-  const store = await getRollCallStore();
-  const today = getRollCallLocalDate();
-
-  const items = (store.rollCallItems || [])
-    .filter(item => !isRollCallExpired(item, today))
-    .sort((a, b) => {
-      if (Boolean(a.pinned) !== Boolean(b.pinned)) return a.pinned ? -1 : 1;
-
-      const priorityOrder = { Critical: 0, High: 1, Normal: 2 };
-      return (priorityOrder[a.priority] ?? 3) - (priorityOrder[b.priority] ?? 3);
-    });
-
-  if (!items.length) {
-    alert("There are no active roll call items to copy.");
+  if (!rollCall.date || !rollCall.supervisor) {
+    alert("Date and supervisor are required.");
     return;
   }
 
-  const grouped = new Map();
+  await updateRecord("employees", store);
+  await openRollCallEditor(rollCall.id);
+}
 
-  items.forEach(item => {
-    const category = item.category || "Other";
-    if (!grouped.has(category)) grouped.set(category, []);
-    grouped.get(category).push(item);
+async function addRollCallSection() {
+  const name = prompt("Section name:");
+  if (!name?.trim()) return;
+
+  const store = await getRollCallStore();
+  const rollCall = findRollCall(store, currentRollCallId);
+  if (!rollCall) return;
+
+  if (!rollCall.sections) rollCall.sections = [];
+
+  rollCall.sections.push({
+    id: crypto.randomUUID(),
+    name: name.trim(),
+    items: []
   });
 
-  const lines = ["ROLL CALL", formatRollCallHeadingDate(today), ""];
+  rollCall.updatedAt = new Date().toISOString();
+  await updateRecord("employees", store);
+  await openRollCallEditor(rollCall.id);
+}
 
-  grouped.forEach((categoryItems, category) => {
-    lines.push(category.toUpperCase());
+async function removeRollCallSection(sectionId) {
+  if (!confirm("Remove this section and all topics inside it?")) return;
+
+  const store = await getRollCallStore();
+  const rollCall = findRollCall(store, currentRollCallId);
+  if (!rollCall) return;
+
+  rollCall.sections = (rollCall.sections || []).filter(section => section.id !== sectionId);
+  rollCall.updatedAt = new Date().toISOString();
+
+  await updateRecord("employees", store);
+  await openRollCallEditor(rollCall.id);
+}
+
+async function openRollCallTopicModal(sectionId, itemId = "") {
+  const store = await getRollCallStore();
+  const rollCall = findRollCall(store, currentRollCallId);
+  const section = (rollCall?.sections || []).find(item => item.id === sectionId);
+
+  if (!section) return;
+
+  const item = itemId
+    ? (section.items || []).find(entry => entry.id === itemId)
+    : null;
+
+  document.getElementById("rollCallModalTitle").textContent =
+    item ? "Edit Topic" : "Add Topic";
+
+  document.getElementById("rollCallModalSubtitle").textContent = section.name;
+  document.getElementById("rollCallModalSectionId").value = sectionId;
+  document.getElementById("rollCallModalItemId").value = itemId;
+  document.getElementById("rollCallItemTitle").value = item?.title || "";
+  document.getElementById("rollCallItemPriority").value = item?.priority || "Normal";
+  document.getElementById("rollCallItemCarryForward").checked = Boolean(item?.carryForward);
+  document.getElementById("rollCallItemNote").value = item?.note || "";
+
+  document.getElementById("rollCallModal").classList.add("open");
+}
+
+function closeRollCallModal(event) {
+  if (event && event.target !== event.currentTarget) return;
+  document.getElementById("rollCallModal")?.classList.remove("open");
+}
+
+async function saveRollCallTopic() {
+  const sectionId = document.getElementById("rollCallModalSectionId").value;
+  const itemId = document.getElementById("rollCallModalItemId").value;
+  const title = document.getElementById("rollCallItemTitle").value.trim();
+  const note = document.getElementById("rollCallItemNote").value.trim();
+
+  if (!title || !note) {
+    alert("Enter a title and note.");
+    return;
+  }
+
+  const store = await getRollCallStore();
+  const rollCall = findRollCall(store, currentRollCallId);
+  const section = (rollCall?.sections || []).find(item => item.id === sectionId);
+
+  if (!section) return;
+  if (!section.items) section.items = [];
+
+  const topic = {
+    id: itemId || crypto.randomUUID(),
+    title,
+    note,
+    priority: document.getElementById("rollCallItemPriority").value,
+    carryForward: document.getElementById("rollCallItemCarryForward").checked,
+    updatedAt: new Date().toISOString()
+  };
+
+  if (itemId) {
+    const index = section.items.findIndex(item => item.id === itemId);
+    if (index !== -1) section.items[index] = topic;
+  } else {
+    section.items.push(topic);
+  }
+
+  rollCall.updatedAt = new Date().toISOString();
+
+  await updateRecord("employees", store);
+  closeRollCallModal();
+  await openRollCallEditor(rollCall.id);
+}
+
+async function removeRollCallTopic(sectionId, itemId) {
+  if (!confirm("Remove this topic?")) return;
+
+  const store = await getRollCallStore();
+  const rollCall = findRollCall(store, currentRollCallId);
+  const section = (rollCall?.sections || []).find(item => item.id === sectionId);
+
+  if (!section) return;
+
+  section.items = (section.items || []).filter(item => item.id !== itemId);
+  rollCall.updatedAt = new Date().toISOString();
+
+  await updateRecord("employees", store);
+  await openRollCallEditor(rollCall.id);
+}
+
+async function deleteRollCall(rollCallId) {
+  if (!confirm("Delete this entire roll call?")) return;
+
+  const store = await getRollCallStore();
+  store.rollCalls = (store.rollCalls || []).filter(item => item.id !== rollCallId);
+  store.updatedAt = new Date().toISOString();
+
+  await updateRecord("employees", store);
+  await loadRollCallPage();
+}
+
+async function showCarryForwardDialog(rollCallId) {
+  const store = await getRollCallStore();
+  const rollCall = findRollCall(store, rollCallId);
+  if (!rollCall) return;
+
+  const eligible = [];
+
+  (rollCall.sections || []).forEach(section => {
+    (section.items || []).forEach(item => {
+      if (item.carryForward) {
+        eligible.push({
+          sectionId: section.id,
+          sectionName: section.name,
+          item
+        });
+      }
+    });
+  });
+
+  document.getElementById("carryForwardDate").value = getTomorrowLocalDate();
+  document.getElementById("carryForwardShift").value = rollCall.shift || "Graveyard";
+  document.getElementById("carryForwardSupervisor").value = rollCall.supervisor || "";
+
+  document.getElementById("carryForwardItems").innerHTML = eligible.length
+    ? `
+      <div class="carry-forward-list">
+        ${eligible.map((entry, index) => `
+          <label class="carry-forward-item">
+            <input
+              type="checkbox"
+              class="carry-forward-checkbox"
+              data-section-name="${escapeRollCallHtml(entry.sectionName)}"
+              data-item-index="${index}"
+              checked
+            />
+            <span>
+              <strong>${escapeRollCallHtml(entry.item.title)}</strong>
+              <small>${escapeRollCallHtml(entry.sectionName)}</small>
+            </span>
+          </label>
+        `).join("")}
+      </div>
+    `
+    : `<p class="muted">No topics are marked carry-forward eligible.</p>`;
+
+  window.rollCallCarryForwardSource = {
+    rollCallId,
+    eligible
+  };
+
+  document.getElementById("carryForwardModal").classList.add("open");
+}
+
+function closeCarryForwardDialog(event) {
+  if (event && event.target !== event.currentTarget) return;
+  document.getElementById("carryForwardModal")?.classList.remove("open");
+}
+
+async function createCarryForwardRollCall() {
+  const source = window.rollCallCarryForwardSource;
+  if (!source) return;
+
+  const date = document.getElementById("carryForwardDate").value;
+  const shift = document.getElementById("carryForwardShift").value;
+  const supervisor = document.getElementById("carryForwardSupervisor").value.trim();
+
+  if (!date || !supervisor) {
+    alert("Date and supervisor are required.");
+    return;
+  }
+
+  const store = await getRollCallStore();
+  const sourceRollCall = findRollCall(store, source.rollCallId);
+  if (!sourceRollCall) return;
+
+  const duplicate = (store.rollCalls || []).find(item =>
+    item.date === date && item.shift === shift
+  );
+
+  if (duplicate) {
+    alert("A roll call already exists for this date and shift.");
+    return;
+  }
+
+  const selectedIndexes = [...document.querySelectorAll(".carry-forward-checkbox:checked")]
+    .map(input => Number(input.dataset.itemIndex));
+
+  const sections = (ROLL_CALL_TEMPLATES[sourceRollCall.template] || [])
+    .map(name => ({
+      id: crypto.randomUUID(),
+      name,
+      items: []
+    }));
+
+  selectedIndexes.forEach(index => {
+    const entry = source.eligible[index];
+    if (!entry) return;
+
+    let section = sections.find(item => item.name === entry.sectionName);
+
+    if (!section) {
+      section = {
+        id: crypto.randomUUID(),
+        name: entry.sectionName,
+        items: []
+      };
+      sections.push(section);
+    }
+
+    section.items.push({
+      ...entry.item,
+      id: crypto.randomUUID(),
+      updatedAt: new Date().toISOString()
+    });
+  });
+
+  const now = new Date().toISOString();
+
+  const rollCall = {
+    id: crypto.randomUUID(),
+    date,
+    shift,
+    supervisor,
+    template: sourceRollCall.template,
+    status: "Draft",
+    createdAt: now,
+    updatedAt: now,
+    sections
+  };
+
+  store.rollCalls.push(rollCall);
+  store.updatedAt = now;
+
+  await updateRecord("employees", store);
+  closeCarryForwardDialog();
+  await openRollCallEditor(rollCall.id);
+}
+
+async function copyRollCallText(rollCallId) {
+  const store = await getRollCallStore();
+  const rollCall = findRollCall(store, rollCallId);
+  if (!rollCall) return;
+
+  const text = buildRollCallPlainText(rollCall);
+
+  try {
+    await navigator.clipboard.writeText(text);
+    alert("Roll call copied to the clipboard.");
+  } catch (error) {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand("copy");
+    textarea.remove();
+    alert("Roll call copied to the clipboard.");
+  }
+}
+
+async function downloadRollCallPdf(rollCallId) {
+  const store = await getRollCallStore();
+  const rollCall = findRollCall(store, rollCallId);
+  if (!rollCall) return;
+
+  const pdfBytes = createSimpleRollCallPdf(rollCall);
+  const blob = new Blob([pdfBytes], { type: "application/pdf" });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `Roll_Call_${rollCall.date}_${sanitizeRollCallFilename(rollCall.shift)}.pdf`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function createSimpleRollCallPdf(rollCall) {
+  const pageWidth = 612;
+  const pageHeight = 792;
+  const margin = 54;
+  const contentWidth = pageWidth - margin * 2;
+  const lineHeight = 14;
+  const maxLinesPerPage = 47;
+
+  const logicalLines = [];
+
+  logicalLines.push({ text: "UNIFIED POLICE DEPARTMENT", size: 16, bold: true, gapAfter: 4 });
+  logicalLines.push({ text: "SUPERVISOR ROLL CALL", size: 14, bold: true, gapAfter: 12 });
+  logicalLines.push({ text: `Date: ${formatRollCallDisplayDate(rollCall.date)}`, size: 10 });
+  logicalLines.push({ text: `Shift: ${rollCall.shift || "N/A"}`, size: 10 });
+  logicalLines.push({ text: `Supervisor: ${rollCall.supervisor || "N/A"}`, size: 10 });
+  logicalLines.push({ text: `Template: ${rollCall.template || "Blank"}`, size: 10 });
+  logicalLines.push({ text: `Status: ${rollCall.status || "Draft"}`, size: 10, gapAfter: 12 });
+
+  (rollCall.sections || []).forEach(section => {
+    const items = section.items || [];
+    if (!items.length) return;
+
+    logicalLines.push({
+      text: section.name.toUpperCase(),
+      size: 12,
+      bold: true,
+      gapBefore: 7,
+      gapAfter: 4
+    });
+
+    items.forEach(item => {
+      logicalLines.push({
+        text: `- ${item.title}${item.priority && item.priority !== "Normal" ? ` [${item.priority}]` : ""}`,
+        size: 10,
+        bold: true
+      });
+
+      wrapPdfText(item.note || "", 82).forEach(line => {
+        logicalLines.push({
+          text: `  ${line}`,
+          size: 10
+        });
+      });
+
+      logicalLines.push({ text: "", size: 10, gapAfter: 3 });
+    });
+  });
+
+  logicalLines.push({
+    text: "Generated by Supervisor Command Center",
+    size: 8,
+    gapBefore: 12
+  });
+
+  const pages = [];
+  let currentPage = [];
+  let lineCount = 0;
+
+  logicalLines.forEach(line => {
+    const extra =
+      Math.ceil((line.gapBefore || 0) / lineHeight) +
+      Math.ceil((line.gapAfter || 0) / lineHeight) +
+      1;
+
+    if (lineCount + extra > maxLinesPerPage && currentPage.length) {
+      pages.push(currentPage);
+      currentPage = [];
+      lineCount = 0;
+    }
+
+    currentPage.push(line);
+    lineCount += extra;
+  });
+
+  if (currentPage.length) pages.push(currentPage);
+
+  const objects = [];
+  const pageObjectIds = [];
+  const contentObjectIds = [];
+
+  objects.push("<< /Type /Catalog /Pages 2 0 R >>");
+  objects.push("");
+
+  pages.forEach(() => {
+    const pageId = objects.length + 1;
+    pageObjectIds.push(pageId);
+    objects.push("");
+
+    const contentId = objects.length + 1;
+    contentObjectIds.push(contentId);
+    objects.push("");
+  });
+
+  const fontRegularId = objects.length + 1;
+  objects.push("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>");
+
+  const fontBoldId = objects.length + 1;
+  objects.push("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>");
+
+  objects[1] =
+    `<< /Type /Pages /Count ${pages.length} /Kids [${pageObjectIds.map(id => `${id} 0 R`).join(" ")}] >>`;
+
+  pages.forEach((pageLines, pageIndex) => {
+    const pageId = pageObjectIds[pageIndex];
+    const contentId = contentObjectIds[pageIndex];
+
+    objects[pageId - 1] =
+      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageWidth} ${pageHeight}] ` +
+      `/Resources << /Font << /F1 ${fontRegularId} 0 R /F2 ${fontBoldId} 0 R >> >> ` +
+      `/Contents ${contentId} 0 R >>`;
+
+    let y = pageHeight - margin;
+    const commands = ["BT"];
+
+    pageLines.forEach(line => {
+      if (line.gapBefore) y -= line.gapBefore;
+
+      const font = line.bold ? "F2" : "F1";
+      const size = line.size || 10;
+
+      commands.push(`/${font} ${size} Tf`);
+      commands.push(`1 0 0 1 ${margin} ${y} Tm`);
+      commands.push(`(${escapePdfText(line.text || "")}) Tj`);
+
+      y -= lineHeight;
+      if (line.gapAfter) y -= line.gapAfter;
+    });
+
+    commands.push("ET");
+
+    const stream = commands.join("\n");
+    objects[contentId - 1] =
+      `<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`;
+  });
+
+  let pdf = "%PDF-1.4\n";
+  const offsets = [0];
+
+  objects.forEach((object, index) => {
+    offsets.push(pdf.length);
+    pdf += `${index + 1} 0 obj\n${object}\nendobj\n`;
+  });
+
+  const xrefOffset = pdf.length;
+  pdf += `xref\n0 ${objects.length + 1}\n`;
+  pdf += "0000000000 65535 f \n";
+
+  for (let i = 1; i <= objects.length; i++) {
+    pdf += `${String(offsets[i]).padStart(10, "0")} 00000 n \n`;
+  }
+
+  pdf +=
+    `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\n` +
+    `startxref\n${xrefOffset}\n%%EOF`;
+
+  return new TextEncoder().encode(pdf);
+}
+
+function buildRollCallPlainText(rollCall) {
+  const lines = [
+    "UNIFIED POLICE DEPARTMENT",
+    "SUPERVISOR ROLL CALL",
+    "",
+    `Date: ${formatRollCallDisplayDate(rollCall.date)}`,
+    `Shift: ${rollCall.shift || "N/A"}`,
+    `Supervisor: ${rollCall.supervisor || "N/A"}`,
+    ""
+  ];
+
+  (rollCall.sections || []).forEach(section => {
+    const items = section.items || [];
+    if (!items.length) return;
+
+    lines.push(section.name.toUpperCase());
     lines.push("");
 
-    categoryItems.forEach(item => {
-      lines.push(`• ${item.title}`);
-      lines.push(`  ${item.message}`);
-
-      if (item.visibleUntil) {
-        lines.push(`  Visible until: ${item.visibleUntil}`);
-      }
-
+    items.forEach(item => {
+      lines.push(`- ${item.title}`);
+      lines.push(`  ${item.note}`);
       lines.push("");
     });
   });
 
-  const output = lines.join("\n").trim();
-
-  try {
-    await navigator.clipboard.writeText(output);
-    alert("Active roll call copied to the clipboard.");
-  } catch (error) {
-    console.error("Clipboard copy failed:", error);
-    showRollCallCopyFallback(output);
-  }
+  return lines.join("\n").trim();
 }
 
-function showRollCallCopyFallback(text) {
-  const modal = document.createElement("div");
-  modal.className = "roll-call-copy-modal";
+function wrapPdfText(text, maxCharacters) {
+  const words = String(text || "").replace(/\s+/g, " ").trim().split(" ");
+  const lines = [];
+  let current = "";
 
-  modal.innerHTML = `
-    <div class="roll-call-copy-content">
-      <h3>Copy Active Roll Call</h3>
-      <textarea readonly>${escapeRollCallHtml(text)}</textarea>
-      <button type="button" onclick="this.closest('.roll-call-copy-modal').remove()">Close</button>
-    </div>
-  `;
+  words.forEach(word => {
+    const proposed = current ? `${current} ${word}` : word;
 
-  document.body.appendChild(modal);
-  modal.querySelector("textarea").select();
+    if (proposed.length > maxCharacters && current) {
+      lines.push(current);
+      current = word;
+    } else {
+      current = proposed;
+    }
+  });
+
+  if (current) lines.push(current);
+  return lines.length ? lines : [""];
+}
+
+function escapePdfText(value) {
+  return String(value || "")
+    .replace(/[^\x20-\x7E]/g, "")
+    .replace(/\\/g, "\\\\")
+    .replace(/\(/g, "\\(")
+    .replace(/\)/g, "\\)");
+}
+
+function sanitizeRollCallFilename(value) {
+  return String(value || "Shift")
+    .replace(/[^a-z0-9]+/gi, "_")
+    .replace(/^_+|_+$/g, "");
 }
 
 async function getRollCallStore() {
@@ -496,23 +1081,35 @@ async function getRollCallStore() {
     throw new Error("Add at least one employee before using Roll Call.");
   }
 
-  if (!store.rollCallItems) store.rollCallItems = [];
+  if (!store.rollCalls) store.rollCalls = [];
   return store;
 }
 
-function isRollCallExpired(item, today = getRollCallLocalDate()) {
-  return Boolean(item.visibleUntil && item.visibleUntil < today);
+function findRollCall(store, rollCallId) {
+  return (store.rollCalls || []).find(item => item.id === rollCallId);
 }
 
 function getRollCallLocalDate() {
   const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
+  return formatRollCallInputDate(now);
+}
+
+function getTomorrowLocalDate() {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  return formatRollCallInputDate(tomorrow);
+}
+
+function formatRollCallInputDate(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 }
 
-function formatRollCallHeadingDate(value) {
+function formatRollCallDisplayDate(value) {
+  if (!value) return "No Date";
+
   const [year, month, day] = value.split("-").map(Number);
 
   return new Date(year, month - 1, day).toLocaleDateString(undefined, {
