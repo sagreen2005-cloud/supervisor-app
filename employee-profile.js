@@ -1,8 +1,17 @@
+let currentEmployeeProfile = null;
+
 async function openEmployeeProfile(id) {
   selectedEmployeeId = id;
 
   const employees = await getAllRecords("employees");
   const employee = employees.find(e => e.id === id);
+
+  if (!employee) {
+    alert("Employee record not found.");
+    return;
+  }
+
+  currentEmployeeProfile = employee;
 
   if (!employee.equipment) employee.equipment = [];
   if (!employee.training) employee.training = [];
@@ -42,6 +51,9 @@ async function showEmployeeTab(tab) {
   const employees = await getAllRecords("employees");
   const employee = employees.find(e => e.id === selectedEmployeeId);
   const container = document.getElementById("employeeTabContent");
+
+  if (!employee || !container) return;
+  currentEmployeeProfile = employee;
 
   if (tab === "overview") loadEmployee360(employee);
   if (tab === "edit") loadEditEmployeeTab(employee);
@@ -108,67 +120,31 @@ function loadEmployee360(employee) {
       <p class="employee-note">${employee.notes || "No general notes entered."}</p>
     </section>
 
-    <div class="dashboard-grid">
-      <div class="stat-card">
-        <div class="number">${activity.length}</div>
-        <div class="label">Timeline Notes</div>
-      </div>
-
-      <div class="stat-card">
-        <div class="number">${performance.length}</div>
-        <div class="label">Performance Entries</div>
-      </div>
-
-      <div class="stat-card">
-        <div class="number">${reportReviews.length}</div>
-        <div class="label">Report Reviews</div>
-      </div>
-
-      <div class="stat-card">
-        <div class="number">${excellentReports}</div>
-        <div class="label">Excellent Reports</div>
-      </div>
-
-      <div class="stat-card warning-card">
-        <div class="number">${returnedReports}</div>
-        <div class="label">Returned Reports</div>
-      </div>
-
-      <div class="stat-card">
-        <div class="number">${commendations}</div>
-        <div class="label">Positive Notes</div>
-      </div>
-
-      <div class="stat-card">
-        <div class="number">${equipment.length}</div>
-        <div class="label">Equipment Items</div>
-      </div>
-
-      <div class="stat-card">
-        <div class="number">${training.length}</div>
-        <div class="label">Training Records</div>
-      </div>
-
-      <div class="stat-card warning-card">
-        <div class="number">${trainingExpiringSoon}</div>
-        <div class="label">Training Expiring Soon</div>
-      </div>
-
-      <div class="stat-card danger-stat">
-        <div class="number">${expiredTraining}</div>
-        <div class="label">Expired Training</div>
-      </div>
-
-      <div class="stat-card">
-        <div class="number">${schedule.length}</div>
-        <div class="label">Schedule Entries</div>
-      </div>
-
-      <div class="stat-card danger-stat">
-        <div class="number">${needsImprovement}</div>
-        <div class="label">Needs Improvement</div>
-      </div>
+    <div class="dashboard-grid employee-360-grid">
+      ${renderEmployee360Card(activity.length, "Timeline Notes", "showEmployeeTab('timeline')")}
+      ${renderEmployee360Card(performance.length, "Performance Entries", "openEmployee360Details('performance')")}
+      ${renderEmployee360Card(reportReviews.length, "Report Reviews", "openEmployee360Details('reports')")}
+      ${renderEmployee360Card(excellentReports, "Excellent Reports", "openEmployee360Details('excellentReports')")}
+      ${renderEmployee360Card(returnedReports, "Returned Reports", "openEmployee360Details('returnedReports')", "warning-card")}
+      ${renderEmployee360Card(commendations, "Positive Notes", "openEmployee360Details('positiveNotes')")}
+      ${renderEmployee360Card(equipment.length, "Equipment Items", "showEmployeeTab('equipment')")}
+      ${renderEmployee360Card(training.length, "Training Records", "showEmployeeTab('training')")}
+      ${renderEmployee360Card(trainingExpiringSoon, "Training Expiring Soon", "openEmployee360Details('expiringTraining')", "warning-card")}
+      ${renderEmployee360Card(expiredTraining, "Expired Training", "openEmployee360Details('expiredTraining')", "danger-stat")}
+      ${renderEmployee360Card(schedule.length, "Schedule Entries", "showEmployeeTab('schedule')")}
+      ${renderEmployee360Card(needsImprovement, "Needs Improvement", "openEmployee360Details('needsImprovement')", "danger-stat")}
     </div>
+
+    <section id="employee360DetailPanel" class="card employee-360-detail-panel" hidden>
+      <div class="employee-360-detail-header">
+        <div>
+          <h3 id="employee360DetailTitle">Details</h3>
+          <p id="employee360DetailSubtitle" class="muted"></p>
+        </div>
+        <button type="button" class="employee-360-close" onclick="closeEmployee360Details()">×</button>
+      </div>
+      <div id="employee360DetailBody"></div>
+    </section>
 
     <section class="card">
       <h3>Recent Activity</h3>
@@ -176,11 +152,11 @@ function loadEmployee360(employee) {
         recentActivity.length === 0
           ? `<p class="muted">No recent activity yet.</p>`
           : recentActivity.map(item => `
-            <div class="timeline-item">
-              <strong>${item.type || "Activity"}</strong>
+            <button type="button" class="timeline-item employee-360-recent-item" onclick="showEmployeeTab('timeline')">
+              <strong>${escapeEmployee360Html(item.type || "Activity")}</strong>
               <span>${item.date ? new Date(item.date).toLocaleString() : "No date"}</span>
-              <p>${item.note || ""}</p>
-            </div>
+              <p>${escapeEmployee360Html(item.note || "")}</p>
+            </button>
           `).join("")
       }
     </section>
@@ -232,4 +208,218 @@ async function saveEmployeeEdits() {
 
   await updateRecord("employees", employee);
   await openEmployeeProfile(employee.id);
+}
+
+
+
+function renderEmployee360Card(number, label, action, extraClass = "") {
+  return `
+    <button
+      type="button"
+      class="stat-card employee-360-stat-link ${extraClass}"
+      onclick="${action}"
+      aria-label="Open ${escapeEmployee360Html(label)}"
+    >
+      <div class="number">${number}</div>
+      <div class="label">${escapeEmployee360Html(label)}</div>
+      <div class="employee-360-card-action">View details ›</div>
+    </button>
+  `;
+}
+
+function openEmployee360Details(category) {
+  const employee = currentEmployeeProfile;
+  const panel = document.getElementById("employee360DetailPanel");
+  const title = document.getElementById("employee360DetailTitle");
+  const subtitle = document.getElementById("employee360DetailSubtitle");
+  const body = document.getElementById("employee360DetailBody");
+
+  if (!employee || !panel || !title || !subtitle || !body) return;
+
+  const activity = employee.activity || [];
+  const performance = employee.performance || [];
+  const reportReviews = employee.reportReviews || [];
+  const training = employee.training || [];
+
+  const today = startOfEmployee360Day(new Date());
+  const thirtyDaysFromNow = new Date(today);
+  thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+
+  let records = [];
+  let heading = "Details";
+  let description = "";
+
+  if (category === "performance") {
+    heading = "Performance Entries";
+    description = `${performance.length} total performance record${performance.length === 1 ? "" : "s"}`;
+    records = performance.map(renderEmployee360PerformanceItem);
+  } else if (category === "needsImprovement") {
+    const filtered = performance.filter(item => item.rating === "1 - Needs Improvement");
+    heading = "Needs Improvement";
+    description = `${filtered.length} matching performance entr${filtered.length === 1 ? "y" : "ies"}`;
+    records = filtered.map(renderEmployee360PerformanceItem);
+  } else if (category === "reports") {
+    heading = "Report Reviews";
+    description = `${reportReviews.length} total report review${reportReviews.length === 1 ? "" : "s"}`;
+    records = reportReviews.map(renderEmployee360ReportItem);
+  } else if (category === "excellentReports") {
+    const filtered = reportReviews.filter(item => item.rating === "Excellent");
+    heading = "Excellent Reports";
+    description = `${filtered.length} report${filtered.length === 1 ? "" : "s"} rated excellent`;
+    records = filtered.map(renderEmployee360ReportItem);
+  } else if (category === "returnedReports") {
+    const filtered = reportReviews.filter(item => item.returnedForCorrection === "Yes");
+    heading = "Returned Reports";
+    description = `${filtered.length} report${filtered.length === 1 ? "" : "s"} returned for correction`;
+    records = filtered.map(renderEmployee360ReportItem);
+  } else if (category === "positiveNotes") {
+    const filtered = activity.filter(item => {
+      const type = String(item.type || "").toLowerCase();
+      return type.includes("commendation") ||
+        type.includes("good job") ||
+        type.includes("compliment");
+    });
+    heading = "Positive Notes";
+    description = `${filtered.length} positive note${filtered.length === 1 ? "" : "s"}`;
+    records = filtered.map(renderEmployee360ActivityItem);
+  } else if (category === "expiringTraining") {
+    const filtered = training.filter(item => {
+      if (!item.expiresDate) return false;
+      const date = parseEmployee360Date(item.expiresDate);
+      return date >= today && date <= thirtyDaysFromNow;
+    });
+    heading = "Training Expiring Soon";
+    description = `${filtered.length} record${filtered.length === 1 ? "" : "s"} expiring within 30 days`;
+    records = filtered.map(renderEmployee360TrainingItem);
+  } else if (category === "expiredTraining") {
+    const filtered = training.filter(item => {
+      if (!item.expiresDate) return false;
+      return parseEmployee360Date(item.expiresDate) < today;
+    });
+    heading = "Expired Training";
+    description = `${filtered.length} expired record${filtered.length === 1 ? "" : "s"}`;
+    records = filtered.map(renderEmployee360TrainingItem);
+  }
+
+  title.textContent = heading;
+  subtitle.textContent = description;
+  body.innerHTML = records.length
+    ? `<div class="employee-360-detail-list">${records.join("")}</div>`
+    : `<p class="muted">No matching records found.</p>`;
+
+  panel.hidden = false;
+  panel.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function closeEmployee360Details() {
+  const panel = document.getElementById("employee360DetailPanel");
+  if (panel) panel.hidden = true;
+}
+
+function renderEmployee360PerformanceItem(item) {
+  const date = item.date || item.createdAt || "";
+  const heading = item.category || item.type || "Performance Entry";
+  const rating = item.rating || "No rating";
+  const note = item.note || item.notes || item.comments || item.description || "";
+
+  return `
+    <article class="employee-360-detail-item">
+      <div class="employee-360-detail-item-header">
+        <strong>${escapeEmployee360Html(heading)}</strong>
+        <span>${escapeEmployee360Html(formatEmployee360Date(date))}</span>
+      </div>
+      <div class="employee-360-detail-meta">${escapeEmployee360Html(rating)}</div>
+      ${note ? `<p>${escapeEmployee360Html(note)}</p>` : ""}
+    </article>
+  `;
+}
+
+function renderEmployee360ReportItem(item) {
+  const caseNumber = item.caseNumber || item.reportNumber || item.case || "Report Review";
+  const date = item.date || item.reviewDate || item.createdAt || "";
+  const rating = item.rating || "No rating";
+  const returned = item.returnedForCorrection === "Yes" ? "Returned for correction" : "Not returned";
+  const note = item.notes || item.note || item.comments || item.feedback || "";
+
+  return `
+    <article class="employee-360-detail-item">
+      <div class="employee-360-detail-item-header">
+        <strong>${escapeEmployee360Html(caseNumber)}</strong>
+        <span>${escapeEmployee360Html(formatEmployee360Date(date))}</span>
+      </div>
+      <div class="employee-360-detail-meta">
+        ${escapeEmployee360Html(rating)} · ${escapeEmployee360Html(returned)}
+      </div>
+      ${note ? `<p>${escapeEmployee360Html(note)}</p>` : ""}
+    </article>
+  `;
+}
+
+function renderEmployee360ActivityItem(item) {
+  const date = item.date || item.createdAt || "";
+  const heading = item.type || "Activity";
+  const note = item.note || item.notes || "";
+
+  return `
+    <article class="employee-360-detail-item">
+      <div class="employee-360-detail-item-header">
+        <strong>${escapeEmployee360Html(heading)}</strong>
+        <span>${escapeEmployee360Html(formatEmployee360Date(date))}</span>
+      </div>
+      ${note ? `<p>${escapeEmployee360Html(note)}</p>` : ""}
+    </article>
+  `;
+}
+
+function renderEmployee360TrainingItem(item) {
+  const heading = item.name || item.trainingName || item.course || item.type || "Training";
+  const completed = item.completedDate || item.date || "Not listed";
+  const expires = item.expiresDate || "No expiration";
+  const note = item.notes || item.note || "";
+
+  return `
+    <article class="employee-360-detail-item">
+      <div class="employee-360-detail-item-header">
+        <strong>${escapeEmployee360Html(heading)}</strong>
+        <span>Expires: ${escapeEmployee360Html(expires)}</span>
+      </div>
+      <div class="employee-360-detail-meta">Completed: ${escapeEmployee360Html(completed)}</div>
+      ${note ? `<p>${escapeEmployee360Html(note)}</p>` : ""}
+    </article>
+  `;
+}
+
+function parseEmployee360Date(value) {
+  if (!value) return new Date(0);
+
+  const parts = String(value).split("-");
+  if (parts.length === 3) {
+    return new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+  }
+
+  return new Date(value);
+}
+
+function startOfEmployee360Day(value) {
+  const date = new Date(value);
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
+
+function formatEmployee360Date(value) {
+  if (!value) return "No date";
+
+  const date = parseEmployee360Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+
+  return date.toLocaleDateString();
+}
+
+function escapeEmployee360Html(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
