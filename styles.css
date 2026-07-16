@@ -1553,3 +1553,152 @@ button:hover {
   gap: 10px;
   margin-top: 8px;
 }
+/* Schedule times and dashboard week view */
+.schedule-all-day-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+}
+
+.schedule-all-day-label input {
+  width: auto;
+}
+
+.schedule-time-shortcuts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0;
+}
+
+.schedule-time-shortcuts button {
+  width: auto;
+  min-width: 0;
+  padding: 5px 8px;
+  font-size: 11px;
+}
+
+.calendar-entry-time {
+  display: block;
+  margin-top: 2px;
+  font-size: 10px;
+  opacity: 0.85;
+}
+
+.dashboard-week-view {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(110px, 1fr));
+  gap: 7px;
+  overflow-x: auto;
+  padding-bottom: 3px;
+}
+
+.dashboard-week-day {
+  min-width: 110px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.dashboard-week-day.today {
+  border-color: var(--accent);
+}
+
+.dashboard-week-day-header {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  background: transparent;
+  border: none;
+  color: inherit;
+}
+
+.dashboard-week-day-header span {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.dashboard-week-day-entries {
+  display: grid;
+  gap: 5px;
+  padding: 7px;
+}
+
+.dashboard-week-entry {
+  width: 100%;
+  min-width: 0;
+  text-align: left;
+  padding: 7px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left-width: 4px;
+  border-radius: 7px;
+  color: inherit;
+}
+
+.dashboard-week-entry strong,
+.dashboard-week-entry span,
+.dashboard-week-entry small {
+  display: block;
+}
+
+.dashboard-week-entry strong {
+  font-size: 11px;
+}
+
+.dashboard-week-entry span,
+.dashboard-week-entry small {
+  color: var(--text-muted);
+  font-size: 10px;
+  margin-top: 2px;
+}
+
+.dashboard-week-entry.schedule-vacation {
+  border-left-color: #22c55e;
+}
+
+.dashboard-week-entry.schedule-sick {
+  border-left-color: #ef4444;
+}
+
+.dashboard-week-entry.schedule-training {
+  border-left-color: #3b82f6;
+}
+
+.dashboard-week-entry.schedule-court {
+  border-left-color: #eab308;
+}
+
+.dashboard-week-entry.schedule-overtime {
+  border-left-color: #a855f7;
+}
+
+.dashboard-week-entry.schedule-holiday {
+  border-left-color: #f97316;
+}
+
+.dashboard-week-entry.schedule-rdo {
+  border-left-color: #94a3b8;
+}
+
+.dashboard-week-entry.schedule-other {
+  border-left-color: var(--accent);
+}
+
+.dashboard-week-empty {
+  color: var(--text-muted);
+  font-size: 10px;
+  padding: 5px 0;
+}
+
+@media (max-width: 1100px) {
+  .dashboard-week-view {
+    grid-template-columns: repeat(7, 130px);
+  }
+}
