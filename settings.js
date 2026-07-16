@@ -1,4 +1,5 @@
 const DEFAULT_DEPARTMENT_BRANDING = {
+  profileName: "Primary Department Profile",
   departmentName: "Unified Police Department",
   departmentSubtitle: "Greater Salt Lake",
   precinctName: "",
@@ -12,17 +13,29 @@ const DEFAULT_DEPARTMENT_BRANDING = {
   fax: "",
   website: "",
   primaryTitleColor: "#0b1f66",
+  accentLineColor: "#111827",
+  documentFont: "Arial",
+  headerLayout: "three-column",
+  watermarkText: "",
+  watermarkOpacity: 0.08,
+  watermarkRotation: -28,
   showBadge: true,
   showWordmark: true,
   showLeadership: true,
   showPrecinct: true,
   showContactLine: true,
+  showWatermark: false,
   useOnRollCall: true,
   useOnEmployeeExport: true,
   useInAppHeader: true,
   badgeImage: "",
   wordmarkImage: "",
-  secondaryImage: ""
+  secondaryImage: "",
+  designerPositions: {
+    left: { x: 3, y: 18, width: 22 },
+    center: { x: 26, y: 4, width: 48 },
+    right: { x: 75, y: 18, width: 22 }
+  }
 };
 
 async function loadSettingsPage() {
@@ -39,10 +52,31 @@ async function loadSettingsPage() {
     <section class="card">
       <div class="branding-settings-header">
         <div>
-          <h3>Department Identity</h3>
-          <p class="muted">Controls the app header and all supported document exports.</p>
+          <h3>Document Designer</h3>
+          <p class="muted">Create reusable department profiles and visually arrange the document header.</p>
         </div>
-        <button type="button" onclick="previewDepartmentLetterhead()">Preview Letterhead</button>
+        <div class="quick-actions">
+          <button type="button" onclick="previewDepartmentLetterhead()">Full Preview</button>
+          <button type="button" onclick="saveDepartmentBrandingProfile()">Save Profile</button>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <select id="brandingProfileSelect" onchange="loadSelectedBrandingProfile()"></select>
+        <input id="brandingProfileName" value="${escapeSettingsHtml(branding.profileName || "Primary Department Profile")}" placeholder="Profile name" />
+
+        <select id="brandingHeaderLayout">
+          <option value="three-column" ${branding.headerLayout === "three-column" ? "selected" : ""}>Three Column</option>
+          <option value="centered" ${branding.headerLayout === "centered" ? "selected" : ""}>Centered</option>
+          <option value="badge-left" ${branding.headerLayout === "badge-left" ? "selected" : ""}>Badge Left</option>
+          <option value="custom" ${branding.headerLayout === "custom" ? "selected" : ""}>Custom Drag Layout</option>
+        </select>
+
+        <select id="brandingDocumentFont">
+          ${["Arial", "Georgia", "Times New Roman", "Verdana"]
+            .map(font => `<option value="${font}" ${branding.documentFont === font ? "selected" : ""}>${font}</option>`)
+            .join("")}
+        </select>
       </div>
 
       <div class="form-grid">
@@ -69,6 +103,65 @@ async function loadSettingsPage() {
         </label>
       </div>
 
+      <div class="form-grid">
+        <label class="branding-color-field">
+          <span>Accent line color</span>
+          <input id="brandingAccentLineColor" type="color" value="${escapeSettingsHtml(branding.accentLineColor || "#111827")}" />
+        </label>
+
+        <input id="brandingWatermarkText" value="${escapeSettingsHtml(branding.watermarkText || "")}" placeholder="Watermark text, such as CONFIDENTIAL" />
+
+        <label class="branding-range-field">
+          <span>Watermark opacity</span>
+          <input id="brandingWatermarkOpacity" type="range" min="0.03" max="0.25" step="0.01" value="${branding.watermarkOpacity ?? 0.08}" />
+        </label>
+
+        <label class="branding-range-field">
+          <span>Watermark rotation</span>
+          <input id="brandingWatermarkRotation" type="range" min="-60" max="0" step="1" value="${branding.watermarkRotation ?? -28}" />
+        </label>
+      </div>
+
+      <div class="document-designer-shell">
+        <div class="document-designer-toolbar">
+          <strong>Live Header Designer</strong>
+          <span class="muted">Drag the left, center, and right blocks. Resize with the width controls below.</span>
+        </div>
+
+        <div id="documentDesignerCanvas" class="document-designer-canvas">
+          <div id="designerLeftBlock" class="designer-block designer-left" data-block="left">
+            <strong>${escapeSettingsHtml(branding.leftName || "Left Name")}</strong>
+            <span>${escapeSettingsHtml(branding.leftTitle || "Left Title")}</span>
+          </div>
+
+          <div id="designerCenterBlock" class="designer-block designer-center" data-block="center">
+            <div class="designer-images">
+              ${branding.badgeImage ? `<img src="${branding.badgeImage}" />` : ""}
+              ${branding.wordmarkImage ? `<img src="${branding.wordmarkImage}" />` : ""}
+            </div>
+            <strong>${escapeSettingsHtml(branding.departmentName || "Department Name")}</strong>
+            <span>${escapeSettingsHtml(branding.precinctName || branding.departmentSubtitle || "Precinct / Division")}</span>
+          </div>
+
+          <div id="designerRightBlock" class="designer-block designer-right" data-block="right">
+            <strong>${escapeSettingsHtml(branding.rightName || "Right Name")}</strong>
+            <span>${escapeSettingsHtml(branding.rightTitle || "Right Title")}</span>
+          </div>
+        </div>
+
+        <div class="designer-width-grid">
+          <label>Left width
+            <input id="designerLeftWidth" type="range" min="12" max="35" value="${branding.designerPositions?.left?.width || 22}" />
+          </label>
+          <label>Center width
+            <input id="designerCenterWidth" type="range" min="30" max="70" value="${branding.designerPositions?.center?.width || 48}" />
+          </label>
+          <label>Right width
+            <input id="designerRightWidth" type="range" min="12" max="35" value="${branding.designerPositions?.right?.width || 22}" />
+          </label>
+        </div>
+      </div>
+
       <div class="branding-image-grid">
         ${renderBrandingImageUploader("Badge / Seal", "brandingBadgeImage", branding.badgeImage)}
         ${renderBrandingImageUploader("Department Wordmark", "brandingWordmarkImage", branding.wordmarkImage)}
@@ -81,6 +174,7 @@ async function loadSettingsPage() {
         ${renderBrandingCheckbox("brandingShowLeadership", "Show leadership names", branding.showLeadership)}
         ${renderBrandingCheckbox("brandingShowPrecinct", "Show precinct / division", branding.showPrecinct)}
         ${renderBrandingCheckbox("brandingShowContactLine", "Show address and contact line", branding.showContactLine)}
+        ${renderBrandingCheckbox("brandingShowWatermark", "Show document watermark", branding.showWatermark)}
         ${renderBrandingCheckbox("brandingUseOnRollCall", "Use on Roll Call PDFs", branding.useOnRollCall)}
         ${renderBrandingCheckbox("brandingUseOnEmployeeExport", "Use on employee exports", branding.useOnEmployeeExport)}
         ${renderBrandingCheckbox("brandingUseInAppHeader", "Use branding in app header", branding.useInAppHeader)}
@@ -141,6 +235,8 @@ async function loadSettingsPage() {
 
   loadEmployeeExportDropdown();
   wireBrandingImageInputs();
+  loadBrandingProfileDropdown();
+  initializeDocumentDesigner(branding);
 }
 
 function renderBrandingCheckbox(id, label, checked) {
@@ -209,17 +305,38 @@ async function saveDepartmentBranding() {
   const branding = collectDepartmentBrandingForm();
   const store = await getSettingsStore();
 
-  store.departmentBranding = branding;
+  if (!Array.isArray(store.departmentBrandingProfiles)) {
+    store.departmentBrandingProfiles = [];
+  }
+
+  const activeId = store.activeDepartmentBrandingProfileId;
+  const existingIndex = store.departmentBrandingProfiles.findIndex(profile => profile.id === activeId);
+
+  const profile = {
+    ...branding,
+    id: activeId || crypto.randomUUID(),
+    updatedAt: new Date().toISOString()
+  };
+
+  if (existingIndex >= 0) {
+    store.departmentBrandingProfiles[existingIndex] = profile;
+  } else {
+    store.departmentBrandingProfiles.push(profile);
+  }
+
+  store.activeDepartmentBrandingProfileId = profile.id;
+  store.departmentBranding = profile;
   store.updatedAt = new Date().toISOString();
 
   await updateRecord("employees", store);
-  applyDepartmentBrandingToApp(branding);
+  applyDepartmentBrandingToApp(profile);
 
   alert("Department Identity saved.");
 }
 
 function collectDepartmentBrandingForm() {
   return {
+    profileName: document.getElementById("brandingProfileName").value.trim() || "Department Profile",
     departmentName: document.getElementById("brandingDepartmentName").value.trim(),
     departmentSubtitle: document.getElementById("brandingDepartmentSubtitle").value.trim(),
     precinctName: document.getElementById("brandingPrecinctName").value.trim(),
@@ -233,17 +350,25 @@ function collectDepartmentBrandingForm() {
     fax: document.getElementById("brandingFax").value.trim(),
     website: document.getElementById("brandingWebsite").value.trim(),
     primaryTitleColor: document.getElementById("brandingPrimaryTitleColor").value,
+    accentLineColor: document.getElementById("brandingAccentLineColor").value,
+    documentFont: document.getElementById("brandingDocumentFont").value,
+    headerLayout: document.getElementById("brandingHeaderLayout").value,
+    watermarkText: document.getElementById("brandingWatermarkText").value.trim(),
+    watermarkOpacity: Number(document.getElementById("brandingWatermarkOpacity").value),
+    watermarkRotation: Number(document.getElementById("brandingWatermarkRotation").value),
     showBadge: document.getElementById("brandingShowBadge").checked,
     showWordmark: document.getElementById("brandingShowWordmark").checked,
     showLeadership: document.getElementById("brandingShowLeadership").checked,
     showPrecinct: document.getElementById("brandingShowPrecinct").checked,
     showContactLine: document.getElementById("brandingShowContactLine").checked,
+    showWatermark: document.getElementById("brandingShowWatermark").checked,
     useOnRollCall: document.getElementById("brandingUseOnRollCall").checked,
     useOnEmployeeExport: document.getElementById("brandingUseOnEmployeeExport").checked,
     useInAppHeader: document.getElementById("brandingUseInAppHeader").checked,
     badgeImage: document.getElementById("brandingBadgeImageData").value,
     wordmarkImage: document.getElementById("brandingWordmarkImageData").value,
-    secondaryImage: document.getElementById("brandingSecondaryImageData").value
+    secondaryImage: document.getElementById("brandingSecondaryImageData").value,
+    designerPositions: getDesignerPositions()
   };
 }
 
@@ -279,9 +404,16 @@ async function resetDepartmentBranding() {
 
 async function getDepartmentBranding() {
   const store = await getSettingsStore();
+  const profiles = Array.isArray(store.departmentBrandingProfiles)
+    ? store.departmentBrandingProfiles
+    : [];
+
+  const activeId = store.activeDepartmentBrandingProfileId;
+  const activeProfile = profiles.find(profile => profile.id === activeId);
+
   return {
     ...DEFAULT_DEPARTMENT_BRANDING,
-    ...(store.departmentBranding || {})
+    ...(activeProfile || store.departmentBranding || {})
   };
 }
 
@@ -299,26 +431,19 @@ async function getSettingsStore() {
 function buildDepartmentLetterheadHtml(branding, options = {}) {
   const documentTitle = options.documentTitle || "";
   const titleColor = branding.primaryTitleColor || "#0b1f66";
+  const accentColor = branding.accentLineColor || "#111827";
+  const positions = branding.designerPositions || DEFAULT_DEPARTMENT_BRANDING.designerPositions;
+  const font = branding.documentFont || "Arial";
 
-  const left = branding.showLeadership
-    ? `
-      <div class="department-letterhead-side left">
-        <strong>${escapeSettingsHtml(branding.leftName || "")}</strong>
-        <span>${escapeSettingsHtml(branding.leftTitle || "")}</span>
-      </div>
-    `
-    : `<div></div>`;
+  const leftContent = branding.showLeadership
+    ? `<strong>${escapeSettingsHtml(branding.leftName || "")}</strong><span>${escapeSettingsHtml(branding.leftTitle || "")}</span>`
+    : "";
 
-  const right = branding.showLeadership
-    ? `
-      <div class="department-letterhead-side right">
-        <strong>${escapeSettingsHtml(branding.rightName || "")}</strong>
-        <span>${escapeSettingsHtml(branding.rightTitle || "")}</span>
-      </div>
-    `
-    : `<div></div>`;
+  const rightContent = branding.showLeadership
+    ? `<strong>${escapeSettingsHtml(branding.rightName || "")}</strong><span>${escapeSettingsHtml(branding.rightTitle || "")}</span>`
+    : "";
 
-  const centerImages = `
+  const centerContent = `
     <div class="department-letterhead-images">
       ${
         branding.showBadge && branding.badgeImage
@@ -336,10 +461,65 @@ function buildDepartmentLetterheadHtml(branding, options = {}) {
           : ""
       }
     </div>
+
+    ${
+      !branding.wordmarkImage
+        ? `<div class="department-letterhead-department">${escapeSettingsHtml(branding.departmentName || "")}</div>`
+        : ""
+    }
+
+    ${
+      branding.departmentSubtitle
+        ? `<div class="department-letterhead-subtitle">${escapeSettingsHtml(branding.departmentSubtitle)}</div>`
+        : ""
+    }
+
+    ${
+      branding.showPrecinct && branding.precinctName
+        ? `<div class="department-letterhead-precinct" style="color:${escapeSettingsHtml(titleColor)}">${escapeSettingsHtml(branding.precinctName)}</div>`
+        : ""
+    }
   `;
 
+  let mainContent = "";
+
+  if (branding.headerLayout === "custom") {
+    mainContent = `
+      <div class="department-letterhead-custom">
+        <div class="department-letterhead-custom-block" style="left:${positions.left.x}%;top:${positions.left.y}%;width:${positions.left.width}%">${leftContent}</div>
+        <div class="department-letterhead-custom-block center" style="left:${positions.center.x}%;top:${positions.center.y}%;width:${positions.center.width}%">${centerContent}</div>
+        <div class="department-letterhead-custom-block right" style="left:${positions.right.x}%;top:${positions.right.y}%;width:${positions.right.width}%">${rightContent}</div>
+      </div>
+    `;
+  } else if (branding.headerLayout === "centered") {
+    mainContent = `
+      <div class="department-letterhead-centered">
+        ${centerContent}
+        <div class="department-letterhead-leadership-line">
+          <div>${leftContent}</div>
+          <div>${rightContent}</div>
+        </div>
+      </div>
+    `;
+  } else if (branding.headerLayout === "badge-left") {
+    mainContent = `
+      <div class="department-letterhead-badge-left">
+        <div>${branding.badgeImage ? `<img class="department-letterhead-badge" src="${branding.badgeImage}" />` : ""}</div>
+        <div class="department-letterhead-center">${centerContent}</div>
+        <div class="department-letterhead-side right">${rightContent}</div>
+      </div>
+    `;
+  } else {
+    mainContent = `
+      <div class="department-letterhead-main">
+        <div class="department-letterhead-side left">${leftContent}</div>
+        <div class="department-letterhead-center">${centerContent}</div>
+        <div class="department-letterhead-side right">${rightContent}</div>
+      </div>
+    `;
+  }
+
   const contactParts = [
-    branding.precinctName,
     branding.addressLine1,
     branding.addressLine2,
     branding.phone ? `Phone: ${branding.phone}` : "",
@@ -348,40 +528,25 @@ function buildDepartmentLetterheadHtml(branding, options = {}) {
   ].filter(Boolean);
 
   return `
-    <header class="department-letterhead">
-      <div class="department-letterhead-main">
-        ${left}
-
-        <div class="department-letterhead-center">
-          ${centerImages}
-          ${
-            !branding.wordmarkImage
-              ? `<div class="department-letterhead-department">${escapeSettingsHtml(branding.departmentName || "")}</div>`
-              : ""
-          }
-          ${
-            branding.departmentSubtitle
-              ? `<div class="department-letterhead-subtitle">${escapeSettingsHtml(branding.departmentSubtitle)}</div>`
-              : ""
-          }
-          ${
-            branding.showPrecinct && branding.precinctName
-              ? `<div class="department-letterhead-precinct" style="color:${escapeSettingsHtml(titleColor)}">${escapeSettingsHtml(branding.precinctName)}</div>`
-              : ""
-          }
-        </div>
-
-        ${right}
-      </div>
-
+    <div class="department-document-shell" style="font-family:${escapeSettingsHtml(font)}, sans-serif">
       ${
-        branding.showContactLine && contactParts.length
-          ? `<div class="department-letterhead-contact">${contactParts.map(escapeSettingsHtml).join(" &nbsp; ◆ &nbsp; ")}</div>`
+        branding.showWatermark && branding.watermarkText
+          ? `<div class="department-document-watermark" style="opacity:${Number(branding.watermarkOpacity || 0.08)};transform:translate(-50%,-50%) rotate(${Number(branding.watermarkRotation || -28)}deg)">${escapeSettingsHtml(branding.watermarkText)}</div>`
           : ""
       }
 
-      ${documentTitle ? `<h1 class="department-document-title">${escapeSettingsHtml(documentTitle)}</h1>` : ""}
-    </header>
+      <header class="department-letterhead" style="border-bottom-color:${escapeSettingsHtml(accentColor)}">
+        ${mainContent}
+
+        ${
+          branding.showContactLine && contactParts.length
+            ? `<div class="department-letterhead-contact">${contactParts.map(escapeSettingsHtml).join(" &nbsp; ◆ &nbsp; ")}</div>`
+            : ""
+        }
+
+        ${documentTitle ? `<h1 class="department-document-title">${escapeSettingsHtml(documentTitle)}</h1>` : ""}
+      </header>
+    </div>
   `;
 }
 
@@ -421,6 +586,224 @@ function applyDepartmentBrandingToApp(branding) {
 
   header.insertBefore(brand, header.firstChild);
 }
+
+
+async function loadBrandingProfileDropdown() {
+  const store = await getSettingsStore();
+
+  if (!Array.isArray(store.departmentBrandingProfiles) || !store.departmentBrandingProfiles.length) {
+    const initial = {
+      ...DEFAULT_DEPARTMENT_BRANDING,
+      ...(store.departmentBranding || {}),
+      id: crypto.randomUUID(),
+      profileName: store.departmentBranding?.profileName || "Primary Department Profile",
+      updatedAt: new Date().toISOString()
+    };
+
+    store.departmentBrandingProfiles = [initial];
+    store.activeDepartmentBrandingProfileId = initial.id;
+    store.departmentBranding = initial;
+    await updateRecord("employees", store);
+  }
+
+  const select = document.getElementById("brandingProfileSelect");
+  if (!select) return;
+
+  select.innerHTML = `
+    ${store.departmentBrandingProfiles.map(profile => `
+      <option value="${profile.id}" ${profile.id === store.activeDepartmentBrandingProfileId ? "selected" : ""}>
+        ${escapeSettingsHtml(profile.profileName || "Department Profile")}
+      </option>
+    `).join("")}
+    <option value="__new__">+ Create New Profile</option>
+  `;
+}
+
+async function loadSelectedBrandingProfile() {
+  const select = document.getElementById("brandingProfileSelect");
+  if (!select) return;
+
+  if (select.value === "__new__") {
+    const store = await getSettingsStore();
+    const profile = {
+      ...DEFAULT_DEPARTMENT_BRANDING,
+      id: crypto.randomUUID(),
+      profileName: "New Department Profile",
+      updatedAt: new Date().toISOString()
+    };
+
+    if (!Array.isArray(store.departmentBrandingProfiles)) {
+      store.departmentBrandingProfiles = [];
+    }
+
+    store.departmentBrandingProfiles.push(profile);
+    store.activeDepartmentBrandingProfileId = profile.id;
+    store.departmentBranding = profile;
+
+    await updateRecord("employees", store);
+    loadSettingsPage();
+    return;
+  }
+
+  const store = await getSettingsStore();
+  const profile = (store.departmentBrandingProfiles || []).find(item => item.id === select.value);
+
+  if (!profile) return;
+
+  store.activeDepartmentBrandingProfileId = profile.id;
+  store.departmentBranding = profile;
+  await updateRecord("employees", store);
+
+  loadSettingsPage();
+}
+
+async function saveDepartmentBrandingProfile() {
+  await saveDepartmentBranding();
+  await loadBrandingProfileDropdown();
+}
+
+function initializeDocumentDesigner(branding) {
+  const positions = branding.designerPositions || DEFAULT_DEPARTMENT_BRANDING.designerPositions;
+
+  ["left", "center", "right"].forEach(name => {
+    const block = document.querySelector(`[data-block="${name}"]`);
+    const position = positions[name] || DEFAULT_DEPARTMENT_BRANDING.designerPositions[name];
+
+    if (!block) return;
+
+    block.style.left = `${position.x}%`;
+    block.style.top = `${position.y}%`;
+    block.style.width = `${position.width}%`;
+
+    makeDesignerBlockDraggable(block);
+  });
+
+  const widthMap = {
+    designerLeftWidth: "left",
+    designerCenterWidth: "center",
+    designerRightWidth: "right"
+  };
+
+  Object.entries(widthMap).forEach(([inputId, name]) => {
+    document.getElementById(inputId)?.addEventListener("input", event => {
+      const block = document.querySelector(`[data-block="${name}"]`);
+      if (block) block.style.width = `${event.target.value}%`;
+    });
+  });
+
+  [
+    "brandingDepartmentName",
+    "brandingPrecinctName",
+    "brandingDepartmentSubtitle",
+    "brandingLeftName",
+    "brandingLeftTitle",
+    "brandingRightName",
+    "brandingRightTitle"
+  ].forEach(id => {
+    document.getElementById(id)?.addEventListener("input", updateDesignerText);
+  });
+}
+
+function updateDesignerText() {
+  const left = document.getElementById("designerLeftBlock");
+  const center = document.getElementById("designerCenterBlock");
+  const right = document.getElementById("designerRightBlock");
+
+  if (left) {
+    left.innerHTML = `
+      <strong>${escapeSettingsHtml(document.getElementById("brandingLeftName").value || "Left Name")}</strong>
+      <span>${escapeSettingsHtml(document.getElementById("brandingLeftTitle").value || "Left Title")}</span>
+    `;
+  }
+
+  if (center) {
+    const badge = document.getElementById("brandingBadgeImageData")?.value || "";
+    const wordmark = document.getElementById("brandingWordmarkImageData")?.value || "";
+
+    center.innerHTML = `
+      <div class="designer-images">
+        ${badge ? `<img src="${badge}" />` : ""}
+        ${wordmark ? `<img src="${wordmark}" />` : ""}
+      </div>
+      <strong>${escapeSettingsHtml(document.getElementById("brandingDepartmentName").value || "Department Name")}</strong>
+      <span>${escapeSettingsHtml(
+        document.getElementById("brandingPrecinctName").value ||
+        document.getElementById("brandingDepartmentSubtitle").value ||
+        "Precinct / Division"
+      )}</span>
+    `;
+  }
+
+  if (right) {
+    right.innerHTML = `
+      <strong>${escapeSettingsHtml(document.getElementById("brandingRightName").value || "Right Name")}</strong>
+      <span>${escapeSettingsHtml(document.getElementById("brandingRightTitle").value || "Right Title")}</span>
+    `;
+  }
+}
+
+function makeDesignerBlockDraggable(block) {
+  let dragging = false;
+  let offsetX = 0;
+  let offsetY = 0;
+
+  block.addEventListener("pointerdown", event => {
+    dragging = true;
+    block.setPointerCapture(event.pointerId);
+
+    const rect = block.getBoundingClientRect();
+    offsetX = event.clientX - rect.left;
+    offsetY = event.clientY - rect.top;
+  });
+
+  block.addEventListener("pointermove", event => {
+    if (!dragging) return;
+
+    const canvas = document.getElementById("documentDesignerCanvas");
+    const rect = canvas.getBoundingClientRect();
+
+    let x = ((event.clientX - rect.left - offsetX) / rect.width) * 100;
+    let y = ((event.clientY - rect.top - offsetY) / rect.height) * 100;
+
+    x = Math.max(0, Math.min(100 - (block.offsetWidth / rect.width) * 100, x));
+    y = Math.max(0, Math.min(100 - (block.offsetHeight / rect.height) * 100, y));
+
+    block.style.left = `${x}%`;
+    block.style.top = `${y}%`;
+  });
+
+  block.addEventListener("pointerup", () => {
+    dragging = false;
+  });
+
+  block.addEventListener("pointercancel", () => {
+    dragging = false;
+  });
+}
+
+function getDesignerPositions() {
+  const canvas = document.getElementById("documentDesignerCanvas");
+  if (!canvas) return DEFAULT_DEPARTMENT_BRANDING.designerPositions;
+
+  const canvasRect = canvas.getBoundingClientRect();
+  const result = {};
+
+  ["left", "center", "right"].forEach(name => {
+    const block = document.querySelector(`[data-block="${name}"]`);
+    if (!block) return;
+
+    const rect = block.getBoundingClientRect();
+
+    result[name] = {
+      x: Number((((rect.left - canvasRect.left) / canvasRect.width) * 100).toFixed(2)),
+      y: Number((((rect.top - canvasRect.top) / canvasRect.height) * 100).toFixed(2)),
+      width: Number(((rect.width / canvasRect.width) * 100).toFixed(2))
+    };
+  });
+
+  return result;
+}
+
 
 async function loadEmployeeExportDropdown() {
   const employees = await getAllRecords("employees");
@@ -766,6 +1149,66 @@ function getDepartmentDocumentCss() {
       font-size: 22px;
       text-align: center;
       margin: 16px 0 0;
+    }
+    .department-document-shell {
+      position: relative;
+    }
+    .department-document-watermark {
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      z-index: 0;
+      font-size: 72px;
+      font-weight: 800;
+      letter-spacing: 8px;
+      color: #111827;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+    .department-letterhead,
+    .department-document-shell > *:not(.department-document-watermark) {
+      position: relative;
+      z-index: 1;
+    }
+    .department-letterhead-custom {
+      position: relative;
+      min-height: 145px;
+    }
+    .department-letterhead-custom-block {
+      position: absolute;
+      font-family: Georgia, serif;
+      font-size: 12px;
+    }
+    .department-letterhead-custom-block strong,
+    .department-letterhead-custom-block span {
+      display: block;
+    }
+    .department-letterhead-custom-block.center {
+      text-align: center;
+    }
+    .department-letterhead-custom-block.right {
+      text-align: right;
+    }
+    .department-letterhead-centered {
+      text-align: center;
+    }
+    .department-letterhead-leadership-line {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-top: 8px;
+      font-family: Georgia, serif;
+      font-size: 12px;
+      text-align: left;
+    }
+    .department-letterhead-leadership-line > div:last-child {
+      text-align: right;
+    }
+    .department-letterhead-badge-left {
+      display: grid;
+      grid-template-columns: 100px 1fr 150px;
+      align-items: center;
+      gap: 14px;
     }
   `;
 }
