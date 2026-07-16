@@ -141,6 +141,9 @@ async function renderCalendar() {
         endDate,
         hours: item.hours,
         notes: item.notes,
+        startTime: item.startTime || "",
+        endTime: item.endTime || "",
+        allDay: Boolean(item.allDay),
         index
       };
 
@@ -244,6 +247,7 @@ function renderCalendarGrid(year, month, entriesByDate) {
             title="${escapeCalendarHtml(entry.employeeName)} — ${escapeCalendarHtml(entry.type)}"
           >
             ${escapeCalendarHtml(entry.employeeName)} - ${escapeCalendarHtml(entry.type)}
+            ${formatCalendarEntryTime(entry) ? `<span class="calendar-entry-time">${escapeCalendarHtml(formatCalendarEntryTime(entry))}</span>` : ""}
           </button>
         `).join("")}
       </div>
@@ -278,6 +282,7 @@ function renderCalendarList(entries) {
             ${escapeCalendarHtml(entry.type)} |
             ${escapeCalendarHtml(entry.startDate)} to
             ${escapeCalendarHtml(entry.endDate || entry.startDate)}
+            ${formatCalendarEntryTime(entry) ? ` · ${escapeCalendarHtml(formatCalendarEntryTime(entry))}` : ""}
           </p>
         </div>
       </div>
@@ -286,6 +291,7 @@ function renderCalendarList(entries) {
         <div><span>Type</span>${escapeCalendarHtml(entry.type)}</div>
         <div><span>Hours</span>${escapeCalendarHtml(entry.hours || "N/A")}</div>
         <div><span>Start</span>${escapeCalendarHtml(entry.startDate)}</div>
+        <div><span>Time</span>${escapeCalendarHtml(formatCalendarEntryTime(entry) || "All Day")}</div>
       </div>
 
       ${entry.notes
@@ -311,4 +317,16 @@ function escapeCalendarHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
+}
+
+
+function formatCalendarEntryTime(entry) {
+  if (entry.allDay) return "All Day";
+
+  const start = entry.startTime || "";
+  const end = entry.endTime || "";
+
+  if (!start && !end) return "";
+  if (start && end) return `${start}-${end}`;
+  return start || end;
 }
