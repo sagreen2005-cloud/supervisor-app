@@ -98,12 +98,12 @@ async function loadSettingsPage() {
       <button onclick="importEmployeeJSON()">Import Employee JSON</button>
     </section>
 
+      <section class="card">
+      <div id="securitySettingsMount"></div>
+    </section>
+
     <section class="card danger-card">
       <h3>Clear Local Data</h3>
-      <p class="muted">Deletes all locally saved employee data from this browser.</p>
-      <button class="danger-btn" onclick="clearAllLocalData()">Clear All Local Data</button>
-    </section>
-  `;
 
   loadEmployeeExportDropdown();
   wireAppLogoInput();
