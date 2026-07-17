@@ -25,45 +25,81 @@ async function loadEvaluationsPage() {
     <section class="card">
       <h3>Create Evaluation</h3>
 
-      <div class="form-grid">
-        <select id="evalEmployeeId">
-          <option value="">Select Employee</option>
-          ${employees.map(employee => `
-            <option value="${employee.id}">
-              ${employee.rank || ""} ${employee.firstName} ${employee.lastName}
-            </option>
-          `).join("")}
-        </select>
+      <div class="form-grid labeled-form-grid">
+        <label class="form-field">
+          <span>Employee <strong class="required-mark">*</strong></span>
+          <select id="evalEmployeeId">
+            <option value="">Select Employee</option>
+            ${employees.map(employee => `
+              <option value="${employee.id}">
+                ${employee.rank || ""} ${employee.firstName} ${employee.lastName}
+              </option>
+            `).join("")}
+          </select>
+        </label>
 
-        <select id="evalType">
-          <option value="Semi-Annual">Semi-Annual</option>
-          <option value="Annual">Annual</option>
-          <option value="Transfer">Transfer</option>
-          <option value="Special">Special</option>
-          <option value="Probation">Probation</option>
-        </select>
+        <label class="form-field">
+          <span>Evaluation Type</span>
+          <select id="evalType">
+            <option value="Semi-Annual">Semi-Annual</option>
+            <option value="Annual">Annual</option>
+            <option value="Transfer">Transfer</option>
+            <option value="Special">Special</option>
+            <option value="Probation">Probation</option>
+          </select>
+        </label>
 
-        <input id="evalPeriodStart" type="date" />
-        <input id="evalPeriodEnd" type="date" />
-        <input id="evalDueDate" type="date" />
+        <label class="form-field">
+          <span>Evaluation Period Start</span>
+          <input id="evalPeriodStart" type="date" />
+        </label>
 
-        <select id="evalStatus">
-          <option value="Not Started">Not Started</option>
-          <option value="In Progress">In Progress</option>
-          <option value="Completed">Completed</option>
-        </select>
+        <label class="form-field">
+          <span>Evaluation Period End</span>
+          <input id="evalPeriodEnd" type="date" />
+        </label>
+
+        <label class="form-field">
+          <span>Evaluation Due Date <strong class="required-mark">*</strong></span>
+          <input id="evalDueDate" type="date" />
+        </label>
+
+        <label class="form-field">
+          <span>Status</span>
+          <select id="evalStatus">
+            <option value="Not Started">Not Started</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Completed">Completed</option>
+          </select>
+        </label>
       </div>
 
-      <textarea id="evalSupervisorGoals" placeholder="Supervisor goals..."></textarea>
-      <textarea id="evalEmployeeGoals" placeholder="Employee goals..."></textarea>
-      <textarea id="evalComments" placeholder="General evaluation comments..."></textarea>
+      <div class="evaluation-notes-grid">
+        <label class="form-field">
+          <span>Supervisor Goals</span>
+          <textarea id="evalSupervisorGoals" placeholder="Goals or expectations established by the supervisor"></textarea>
+        </label>
+
+        <label class="form-field">
+          <span>Employee Goals</span>
+          <textarea id="evalEmployeeGoals" placeholder="Goals identified by the employee"></textarea>
+        </label>
+
+        <label class="form-field form-field-full">
+          <span>General Evaluation Comments</span>
+          <textarea id="evalComments" placeholder="Overall comments, observations, and supporting information"></textarea>
+        </label>
+      </div>
 
       <button onclick="createEvaluation()">Create Evaluation</button>
     </section>
 
     <section class="card">
       <h3>Evaluation History</h3>
-      <input id="evaluationSearchBox" placeholder="Search evaluations..." />
+      <label class="form-field form-field-full">
+        <span>Search Evaluations</span>
+        <input id="evaluationSearchBox" type="search" placeholder="Search by employee, type, status, date, or notes" />
+      </label>
       <div id="evaluationList"></div>
     </section>
   `;
@@ -198,14 +234,20 @@ async function openEvaluation(employeeId, evaluationIndex) {
       <h2>${employee.rank || ""} ${employee.firstName} ${employee.lastName}</h2>
       <p class="muted">${evaluation.type} Evaluation | Due: ${evaluation.dueDate || "N/A"}</p>
 
-      <div class="form-grid">
-        <select id="editEvalStatus">
-          <option value="Not Started" ${evaluation.status === "Not Started" ? "selected" : ""}>Not Started</option>
-          <option value="In Progress" ${evaluation.status === "In Progress" ? "selected" : ""}>In Progress</option>
-          <option value="Completed" ${evaluation.status === "Completed" ? "selected" : ""}>Completed</option>
-        </select>
+      <div class="form-grid labeled-form-grid">
+        <label class="form-field">
+          <span>Evaluation Status</span>
+          <select id="editEvalStatus">
+            <option value="Not Started" ${evaluation.status === "Not Started" ? "selected" : ""}>Not Started</option>
+            <option value="In Progress" ${evaluation.status === "In Progress" ? "selected" : ""}>In Progress</option>
+            <option value="Completed" ${evaluation.status === "Completed" ? "selected" : ""}>Completed</option>
+          </select>
+        </label>
 
-        <input id="editEvalDueDate" type="date" value="${evaluation.dueDate || ""}" />
+        <label class="form-field">
+          <span>Evaluation Due Date</span>
+          <input id="editEvalDueDate" type="date" value="${evaluation.dueDate || ""}" />
+        </label>
       </div>
     </section>
 
@@ -216,20 +258,39 @@ async function openEvaluation(employeeId, evaluationIndex) {
         <div class="evaluation-score-block">
           <h4>${score.category}</h4>
 
-          <select id="scoreRating${index}">
-            <option value="3" ${score.rating === "3" ? "selected" : ""}>3 - Exemplary</option>
-            <option value="2" ${score.rating === "2" ? "selected" : ""}>2 - UPD Standard</option>
-            <option value="1" ${score.rating === "1" ? "selected" : ""}>1 - Needs Improvement</option>
-            <option value="N.O." ${score.rating === "N.O." ? "selected" : ""}>N.O. - Not Observed</option>
-          </select>
+          <label class="form-field">
+            <span>Rating</span>
+            <select id="scoreRating${index}">
+              <option value="3" ${score.rating === "3" ? "selected" : ""}>3 - Exemplary</option>
+              <option value="2" ${score.rating === "2" ? "selected" : ""}>2 - UPD Standard</option>
+              <option value="1" ${score.rating === "1" ? "selected" : ""}>1 - Needs Improvement</option>
+              <option value="N.O." ${score.rating === "N.O." ? "selected" : ""}>N.O. - Not Observed</option>
+            </select>
+          </label>
 
-          <textarea id="scoreJustification${index}" placeholder="Justification of score...">${score.justification || ""}</textarea>
+          <label class="form-field form-field-full">
+            <span>Score Justification</span>
+            <textarea id="scoreJustification${index}" placeholder="Explain the observations supporting this rating">${score.justification || ""}</textarea>
+          </label>
         </div>
       `).join("")}
 
-      <textarea id="editSupervisorGoals" placeholder="Supervisor goals...">${evaluation.supervisorGoals || ""}</textarea>
-      <textarea id="editEmployeeGoals" placeholder="Employee goals...">${evaluation.employeeGoals || ""}</textarea>
-      <textarea id="editEvalComments" placeholder="Comments...">${evaluation.comments || ""}</textarea>
+      <div class="evaluation-notes-grid">
+        <label class="form-field">
+          <span>Supervisor Goals</span>
+          <textarea id="editSupervisorGoals">${evaluation.supervisorGoals || ""}</textarea>
+        </label>
+
+        <label class="form-field">
+          <span>Employee Goals</span>
+          <textarea id="editEmployeeGoals">${evaluation.employeeGoals || ""}</textarea>
+        </label>
+
+        <label class="form-field form-field-full">
+          <span>General Evaluation Comments</span>
+          <textarea id="editEvalComments">${evaluation.comments || ""}</textarea>
+        </label>
+      </div>
 
       <button onclick="saveEvaluation(${employeeId}, ${evaluationIndex})">Save Evaluation</button>
     </section>
@@ -254,7 +315,6 @@ async function saveEvaluation(employeeId, evaluationIndex) {
   }));
 
   evaluation.updatedAt = new Date().toISOString();
-
   employee.updatedAt = new Date().toISOString();
 
   await updateRecord("employees", employee);
