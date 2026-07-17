@@ -1,2396 +1,604 @@
-:root {
-  --bg-main: #0f172a;
-  --bg-panel: #020617;
-  --bg-card: #111827;
-  --bg-card-light: #1f2937;
-  --bg-input: #0b1220;
-  --text-main: #f9fafb;
-  --text-muted: #9ca3af;
-  --accent: #2563eb;
-  --accent-hover: #1d4ed8;
-  --border: #334155;
-  --danger: #991b1b;
-  --warning: #ca8a04;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  font-family: Arial, Helvetica, sans-serif;
-  background: var(--bg-main);
-  color: var(--text-main);
-}
-
-.app-header {
-  height: 64px;
-  background: linear-gradient(90deg, #020617, #0f172a, #111827);
-  color: white;
-  padding: 11px 22px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-}
-
-.app-header h1 {
-  margin: 0;
-  font-size: 22px;
-}
-
-.app-header p {
-  margin: 3px 0 0;
-  color: var(--text-muted);
-  font-size: 12px;
-}
-
-#container {
-  display: flex;
-  height: calc(100vh - 64px);
-}
-
-.sidebar {
-  width: 250px;
-  background: var(--bg-panel);
-  border-right: 1px solid var(--border);
-  padding: 14px 12px;
-  overflow-y: auto;
-}
-
-.nav-section {
-  margin-bottom: 12px;
-}
-
-.nav-label {
-  color: #64748b;
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 1.1px;
-  margin: 0 0 5px 8px;
-  font-weight: bold;
-}
-
-.sidebar button,
-nav button {
-  width: 100%;
-  background: transparent;
-  color: var(--text-muted);
-  border: 1px solid transparent;
-  text-align: left;
-  padding: 9px 10px;
-  font-size: 13px;
-  border-radius: 8px;
-  cursor: pointer;
-  margin-bottom: 4px;
-}
-
-.sidebar button:hover,
-nav button:hover {
-  background: #111827;
-  color: white;
-  border-color: var(--border);
-}
-
-#content {
-  flex: 1;
-  padding: 16px;
-  overflow: auto;
-  background:
-    radial-gradient(circle at top left, #1e3a8a22, transparent 35%),
-    linear-gradient(180deg, #0f172a, #111827);
-}
-
-.card,
-.stat-card,
-.compact-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 12px;
-  margin-bottom: 10px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.22);
-}
-
-.card h2,
-.card h3,
-.card h4 {
-  margin-top: 0;
-}
-
-.page-header {
-  margin-bottom: 12px;
-}
-
-.page-header h2 {
-  font-size: 26px;
-  margin: 0;
-}
-
-.page-header p {
-  color: var(--text-muted);
-  margin: 4px 0 0;
-  font-size: 13px;
-}
-
-input,
-textarea,
-select {
-  width: 100%;
-  background: var(--bg-input);
-  color: var(--text-main);
-  border: 1px solid var(--border);
-  padding: 9px;
-  margin: 6px 0;
-  border-radius: 7px;
-  font-size: 14px;
-}
-
-textarea {
-  min-height: 80px;
-}
-
-button {
-  background: var(--accent);
-  color: white;
-  border: none;
-  padding: 9px 11px;
-  border-radius: 7px;
-  cursor: pointer;
-  font-weight: bold;
-  font-size: 13px;
-}
-
-button:hover {
-  background: var(--accent-hover);
-}
-
-.muted {
-  color: var(--text-muted);
-}
-
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(185px, 1fr));
-  gap: 8px;
-}
-
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
-  gap: 8px;
-}
-
-.employee-card,
-.timeline-item,
-.task-card,
-.search-result-card,
-.file-card,
-.review-card,
-.performance-card,
-.evaluation-card,
-.training-card,
-.schedule-card,
-.daily-log-card,
-.evaluation-score-block {
-  background: var(--bg-card-light);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 12px;
-  margin-top: 10px;
-}
-
-.employee-card h3,
-.timeline-item h3,
-.task-card h3,
-.search-result-card h3,
-.file-card h3,
-.review-card h3,
-.performance-card h3,
-.evaluation-card h3,
-.training-card h3,
-.schedule-card h3,
-.daily-log-card h3 {
-  margin: 0 0 4px;
-  font-size: 17px;
-}
-
-.employee-top {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  align-items: start;
-}
-
-.employee-details {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.employee-details div {
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  border-radius: 9px;
-  padding: 9px;
-}
-
-.employee-details span {
-  display: block;
-  color: var(--text-muted);
-  font-size: 12px;
-  margin-bottom: 4px;
-}
-
-.employee-note {
-  margin-top: 10px;
-  padding: 10px;
-  background: var(--bg-input);
-  border-left: 3px solid var(--accent);
-  border-radius: 7px;
-}
-
-.danger-btn {
-  background: var(--danger);
-  width: auto;
-}
-
-.danger-btn:hover {
-  background: #7f1d1d;
-}
-
-.profile-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 14px;
-}
-
-.profile-tabs button {
-  width: auto;
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  color: var(--text-muted);
-}
-
-.profile-tabs button:hover {
-  background: var(--accent);
-  color: white;
-}
-
-.quick-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.quick-actions button {
-  width: auto;
-  min-width: 95px;
-  padding: 8px 10px;
-}
-
-.compact-dashboard-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 10px;
-}
-
-.compact-dashboard-header h2 {
-  margin: 0;
-  font-size: 26px;
-}
-
-.compact-dashboard-header p {
-  color: var(--text-muted);
-  margin: 3px 0 0;
-  font-size: 13px;
-}
-
-.staffing-strip {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 8px;
-  margin-bottom: 10px;
-}
-
-.staffing-strip div {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 11px;
-  padding: 9px;
-  text-align: center;
-}
-
-.staffing-strip strong {
-  display: block;
-  font-size: 24px;
-  line-height: 1;
-}
-
-.staffing-strip span {
-  color: var(--text-muted);
-  font-size: 12px;
-}
-
-.dashboard-two-column {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(260px, 1fr));
-  gap: 10px;
-}
-
-.compact-card {
-  margin-bottom: 0;
-}
-
-.compact-card h3 {
-  margin-bottom: 8px;
-  font-size: 17px;
-}
-
-.compact-group,
-.compact-line,
-.compact-alert,
-.mini-employee,
-.alert-card {
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  border-radius: 9px;
-  padding: 8px;
-  margin-top: 6px;
-}
-
-.compact-group strong,
-.compact-line strong,
-.compact-alert strong {
-  display: block;
-  font-size: 13px;
-}
-
-.compact-group span,
-.compact-line span,
-.compact-alert span {
-  display: block;
-  color: var(--text-muted);
-  font-size: 12px;
-  margin-top: 3px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.clickable,
-.employee-card,
-.search-result-card,
-.mini-employee,
-.calendar-entry,
-.schedule-card {
-  cursor: pointer;
-}
-
-.clickable:hover,
-.employee-card:hover,
-.search-result-card:hover,
-.mini-employee:hover,
-.calendar-entry:hover,
-.schedule-card:hover {
-  border-color: var(--accent);
-}
-
-.warning-card,
-.high-task {
-  border-color: var(--warning);
-}
-
-.danger-stat,
-.critical-task,
-.critical-text {
-  border-color: var(--danger);
-}
-
-.file-actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.file-actions button {
-  width: auto;
-}
-
-.checkbox-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 8px;
-  margin: 10px 0 14px;
-}
-
-.checkbox-grid label {
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 8px;
-  color: var(--text-muted);
-}
-
-.checkbox-grid input {
-  width: auto;
-  display: inline;
-  margin-right: 6px;
-}
-
-#calendarGrid {
-  width: 100%;
-  overflow-x: auto;
-}
-
-.calendar-grid {
-  display: grid !important;
-  grid-template-columns: repeat(7, 1fr) !important;
-  gap: 6px;
-  width: 100%;
-  min-width: 900px;
-}
-
-.calendar-day-header {
-  font-weight: bold;
-  color: var(--text-muted);
-  text-align: center;
-  padding: 8px;
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  font-size: 12px;
-}
-
-.calendar-day {
-  min-height: 105px;
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  border-radius: 9px;
-  padding: 7px;
-  overflow-y: auto;
-}
-
-.calendar-day strong {
-  font-size: 13px;
-}
-
-.empty-day {
-  background: transparent;
-  border: none;
-}
-
-.calendar-entry {
-  display: block;
-  font-size: 11px;
-  padding: 5px;
-  border-radius: 6px;
-  margin-top: 5px;
-  border: 1px solid var(--border);
-  color: white;
-}
-
-.calendar-vacation { background: #854d0e; }
-.calendar-sick { background: #7f1d1d; }
-.calendar-training { background: #1e3a8a; }
-.calendar-court { background: #064e3b; }
-.calendar-overtime { background: #581c87; }
-.calendar-other { background: #374151; }
-
-@media (max-width: 1000px) {
-  .staffing-strip {
-    grid-template-columns: repeat(3, 1fr);
+const DEFAULT_APP_APPEARANCE = {
+  appName: "Supervisor Command Center",
+  departmentName: "Unified Police Department",
+  appLogo: "",
+  showLogo: true,
+  theme: "midnight",
+  accent: "blue",
+  fontSize: "medium",
+  density: "comfortable",
+  cardStyle: "rounded",
+  sidebarSize: "standard"
+};
+
+const APP_THEME_PRESETS = {
+  midnight: { label: "Midnight Blue", description: "Current dark night-shift theme.", colors: { bgMain: "#0f172a", bgPanel: "#020617", bgCard: "#111827", bgCardLight: "#1f2937", bgInput: "#0b1220", textMain: "#f9fafb", textMuted: "#9ca3af", border: "#334155" } },
+  police: { label: "Police Blue", description: "Dark blue panels with brighter blue surfaces.", colors: { bgMain: "#0b1f33", bgPanel: "#061321", bgCard: "#112a43", bgCardLight: "#173a5d", bgInput: "#0a1a2b", textMain: "#f4f9ff", textMuted: "#a9bfd2", border: "#315776" } },
+  slate: { label: "Slate Gray", description: "Neutral gray-blue appearance.", colors: { bgMain: "#17202a", bgPanel: "#0e151d", bgCard: "#202b36", bgCardLight: "#2a3744", bgInput: "#141d26", textMain: "#f5f7fa", textMuted: "#aeb8c3", border: "#465564" } },
+  carbon: { label: "Carbon Black", description: "Deep black CAD-style appearance.", colors: { bgMain: "#090b0f", bgPanel: "#030406", bgCard: "#111318", bgCardLight: "#1a1d23", bgInput: "#0b0d11", textMain: "#f7f7f8", textMuted: "#a5a7ad", border: "#343840" } },
+  emerald: { label: "Emerald", description: "Dark green-gray panels.", colors: { bgMain: "#0d1f1a", bgPanel: "#06120f", bgCard: "#132b24", bgCardLight: "#1a3a31", bgInput: "#0a1915", textMain: "#f2fbf7", textMuted: "#a5c0b5", border: "#31594a" } },
+  light: { label: "Light", description: "Bright daytime appearance.", colors: { bgMain: "#eef3f8", bgPanel: "#ffffff", bgCard: "#ffffff", bgCardLight: "#f5f8fb", bgInput: "#ffffff", textMain: "#17202a", textMuted: "#667482", border: "#cbd5df" } },
+  highContrast: { label: "High Contrast", description: "Maximum contrast.", colors: { bgMain: "#000000", bgPanel: "#000000", bgCard: "#080808", bgCardLight: "#111111", bgInput: "#000000", textMain: "#ffffff", textMuted: "#e5e5e5", border: "#ffffff" } }
+};
+
+const APP_ACCENT_PRESETS = {
+  blue: { label: "Blue", value: "#2563eb", hover: "#1d4ed8" },
+  cyan: { label: "Cyan", value: "#0891b2", hover: "#0e7490" },
+  green: { label: "Green", value: "#16885c", hover: "#116b49" },
+  purple: { label: "Purple", value: "#7c3aed", hover: "#6d28d9" },
+  orange: { label: "Orange", value: "#d97706", hover: "#b45309" },
+  red: { label: "Red", value: "#dc2626", hover: "#b91c1c" },
+  gold: { label: "Gold", value: "#b88900", hover: "#946f00" }
+};
+
+async function loadSettingsPage() {
+  const appearance = await getAppAppearance();
+
+  document.getElementById("content").innerHTML = `
+    <div class="page-header">
+      <div>
+        <h2>Settings</h2>
+        <p>App appearance, backup, exports, and local database management.</p>
+      </div>
+    </div>
+
+    <section class="card appearance-settings-card">
+      <div class="branding-settings-header"><div><h3>App Appearance</h3><p class="muted">Choose the theme, accent color, spacing, and application identity.</p></div></div>
+
+      <div class="appearance-section"><h4>Theme</h4><div class="appearance-theme-grid">
+        ${Object.entries(APP_THEME_PRESETS).map(([key, preset]) => `<label class="appearance-theme-option ${appearance.theme === key ? "selected" : ""}"><input type="radio" name="appearanceTheme" value="${key}" ${appearance.theme === key ? "checked" : ""}><span class="appearance-theme-preview theme-preview-${key}"><i></i><i></i><i></i></span><strong>${preset.label}</strong><small>${preset.description}</small></label>`).join("")}
+      </div></div>
+
+      <div class="appearance-section"><h4>Accent Color</h4><div class="appearance-accent-grid">
+        ${Object.entries(APP_ACCENT_PRESETS).map(([key, preset]) => `<label class="appearance-accent-option ${appearance.accent === key ? "selected" : ""}"><input type="radio" name="appearanceAccent" value="${key}" ${appearance.accent === key ? "checked" : ""}><span style="background:${preset.value}"></span>${preset.label}</label>`).join("")}
+      </div></div>
+
+      <div class="appearance-control-grid">
+        <label><span>Font Size</span><select id="appearanceFontSize"><option value="small" ${appearance.fontSize === "small" ? "selected" : ""}>Small</option><option value="medium" ${appearance.fontSize === "medium" ? "selected" : ""}>Medium</option><option value="large" ${appearance.fontSize === "large" ? "selected" : ""}>Large</option></select></label>
+        <label><span>Screen Density</span><select id="appearanceDensity"><option value="comfortable" ${appearance.density === "comfortable" ? "selected" : ""}>Comfortable</option><option value="compact" ${appearance.density === "compact" ? "selected" : ""}>Compact</option><option value="dense" ${appearance.density === "dense" ? "selected" : ""}>Information Dense</option></select></label>
+        <label><span>Card Style</span><select id="appearanceCardStyle"><option value="rounded" ${appearance.cardStyle === "rounded" ? "selected" : ""}>Rounded</option><option value="square" ${appearance.cardStyle === "square" ? "selected" : ""}>Square</option><option value="flat" ${appearance.cardStyle === "flat" ? "selected" : ""}>Flat</option></select></label>
+        <label><span>Sidebar Size</span><select id="appearanceSidebarSize"><option value="standard" ${appearance.sidebarSize === "standard" ? "selected" : ""}>Standard</option><option value="compact" ${appearance.sidebarSize === "compact" ? "selected" : ""}>Compact</option></select></label>
+      </div>
+
+      <div class="appearance-section"><h4>Application Identity</h4><div class="form-grid"><input id="appearanceAppName" value="${escapeSettingsHtml(appearance.appName)}" placeholder="App name"><input id="appearanceDepartmentName" value="${escapeSettingsHtml(appearance.departmentName)}" placeholder="Department or division"></div>
+      <div class="app-logo-settings"><div class="app-logo-preview" id="appLogoPreview">${appearance.appLogo ? `<img src="${appearance.appLogo}" alt="App logo preview">` : `<div class="app-logo-fallback">SCC</div>`}</div><div class="app-logo-controls"><strong>App Logo</strong><p class="muted">PNG, JPG, or WebP. Stored locally.</p><input id="appearanceAppLogo" type="file" accept="image/png,image/jpeg,image/webp"><input id="appearanceAppLogoData" type="hidden" value="${appearance.appLogo ? escapeSettingsHtml(appearance.appLogo) : ""}"><button type="button" class="secondary-btn" onclick="removeAppLogo()">Remove Logo</button></div></div>
+      <div class="checkbox-grid"><label><input id="appearanceShowLogo" type="checkbox" ${appearance.showLogo ? "checked" : ""}> Show logo in application header</label></div></div>
+      <div class="quick-actions"><button type="button" onclick="saveAppAppearance()">Save Appearance</button><button type="button" class="secondary-btn" onclick="previewAppAppearance()">Preview Changes</button><button type="button" class="secondary-btn" onclick="resetAppAppearance()">Reset Appearance</button></div>
+    </section>
+
+    <section class="card">
+      <h3>Export Full Backup</h3>
+      <p class="muted">Downloads a full local backup containing employee records, Roll Calls, Smart Import rules, and app settings.</p>
+      <button onclick="exportBackup()">Export Full Backup</button>
+    </section>
+
+    <section class="card">
+      <h3>Import Full Backup</h3>
+      <p class="muted">Restores records from a full backup file. This replaces current employee data.</p>
+      <input id="backupFile" type="file" accept=".json" />
+      <button onclick="importBackup()">Import Full Backup</button>
+    </section>
+
+    <section class="card">
+      <h3>Employee Export / Transfer</h3>
+      <p class="muted">Export one employee as a clean PDF summary or as a JSON file that can be imported later.</p>
+
+      <select id="exportEmployeeSelect"></select>
+
+      <div class="quick-actions">
+        <button onclick="exportEmployeePDF()">Export Employee PDF</button>
+        <button onclick="exportEmployeeJSON()">Export Employee JSON</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h3>Import Employee JSON</h3>
+      <p class="muted">Bring back a former employee with their notes, files, training, schedule, evaluations, and history.</p>
+      <input id="employeeJsonFile" type="file" accept=".json" />
+      <button onclick="importEmployeeJSON()">Import Employee JSON</button>
+    </section>
+
+    <section class="card danger-card">
+      <h3>Clear Local Data</h3>
+      <p class="muted">Deletes all locally saved employee data from this browser.</p>
+      <button class="danger-btn" onclick="clearAllLocalData()">Clear All Local Data</button>
+    </section>
+  `;
+
+  loadEmployeeExportDropdown();
+  wireAppLogoInput();
+  wireAppearanceOptionCards();
+  if (typeof renderSecuritySettingsSection === "function") renderSecuritySettingsSection();
+}
+
+function wireAppLogoInput() {
+  document.getElementById("appearanceAppLogo")?.addEventListener("change", event => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2_500_000) {
+      alert("Use an image smaller than 2.5 MB.");
+      event.target.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const value = String(reader.result || "");
+      document.getElementById("appearanceAppLogoData").value = value;
+      document.getElementById("appLogoPreview").innerHTML =
+        `<img src="${value}" alt="App logo preview" />`;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function removeAppLogo() {
+  const input = document.getElementById("appearanceAppLogo");
+  const data = document.getElementById("appearanceAppLogoData");
+  const preview = document.getElementById("appLogoPreview");
+
+  if (input) input.value = "";
+  if (data) data.value = "";
+  if (preview) preview.innerHTML = `<div class="app-logo-fallback">SCC</div>`;
+}
+
+async function saveAppAppearance() {
+  const appearance = collectAppearanceFormValues();
+  const store = await getSettingsStore();
+  store.appAppearance = appearance;
+  store.updatedAt = new Date().toISOString();
+  await updateRecord("employees", store);
+  applyAppAppearance(appearance);
+  alert("App appearance saved.");
+}
+
+function collectAppearanceFormValues() {
+  return {
+    appName: document.getElementById("appearanceAppName")?.value.trim() || DEFAULT_APP_APPEARANCE.appName,
+    departmentName: document.getElementById("appearanceDepartmentName")?.value.trim() || DEFAULT_APP_APPEARANCE.departmentName,
+    appLogo: document.getElementById("appearanceAppLogoData")?.value || "",
+    showLogo: document.getElementById("appearanceShowLogo")?.checked !== false,
+    theme: document.querySelector('input[name="appearanceTheme"]:checked')?.value || DEFAULT_APP_APPEARANCE.theme,
+    accent: document.querySelector('input[name="appearanceAccent"]:checked')?.value || DEFAULT_APP_APPEARANCE.accent,
+    fontSize: document.getElementById("appearanceFontSize")?.value || DEFAULT_APP_APPEARANCE.fontSize,
+    density: document.getElementById("appearanceDensity")?.value || DEFAULT_APP_APPEARANCE.density,
+    cardStyle: document.getElementById("appearanceCardStyle")?.value || DEFAULT_APP_APPEARANCE.cardStyle,
+    sidebarSize: document.getElementById("appearanceSidebarSize")?.value || DEFAULT_APP_APPEARANCE.sidebarSize,
+    updatedAt: new Date().toISOString()
+  };
+}
+function previewAppAppearance() { applyAppAppearance(collectAppearanceFormValues()); }
+function wireAppearanceOptionCards() {
+  document.querySelectorAll(".appearance-theme-option, .appearance-accent-option").forEach(option => option.addEventListener("click", () => {
+    const selector = option.classList.contains("appearance-theme-option") ? ".appearance-theme-option" : ".appearance-accent-option";
+    document.querySelectorAll(selector).forEach(item => item.classList.remove("selected"));
+    option.classList.add("selected");
+  }));
+  document.querySelectorAll('input[name="appearanceTheme"], input[name="appearanceAccent"], #appearanceFontSize, #appearanceDensity, #appearanceCardStyle, #appearanceSidebarSize').forEach(control => control.addEventListener("change", previewAppAppearance));
+}
+
+async function resetAppAppearance() {
+  if (!confirm("Reset the app appearance to defaults?")) return;
+
+  const store = await getSettingsStore();
+  store.appAppearance = { ...DEFAULT_APP_APPEARANCE };
+  store.updatedAt = new Date().toISOString();
+  await updateRecord("employees", store);
+
+  applyAppAppearance(store.appAppearance);
+  loadSettingsPage();
+}
+
+async function getAppAppearance() {
+  const store = await getSettingsStore();
+  const legacy = store.departmentBranding || {};
+
+  return {
+    ...DEFAULT_APP_APPEARANCE,
+    ...(store.appAppearance || {}),
+    ...(!store.appAppearance ? {
+      departmentName: legacy.departmentName || DEFAULT_APP_APPEARANCE.departmentName,
+      appLogo: legacy.badgeImage || legacy.wordmarkImage || "",
+      showLogo: legacy.useInAppHeader !== false
+    } : {})
+  };
+}
+
+async function getSettingsStore() {
+  const employees = await getAllRecords("employees");
+  const store = employees[0];
+
+  if (!store) {
+    throw new Error("Add at least one employee before using settings.");
   }
 
-  .dashboard-two-column {
-    grid-template-columns: 1fr;
-  }
-
-  .compact-dashboard-header {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .sidebar {
-    width: 220px;
-  }
-}
-.header-actions {
-  margin-left: auto;
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.header-actions button {
-  width: auto;
-  min-width: 110px;
-  padding: 8px 10px;
-  font-size: 12px;
-}
-/* Dashboard v22 additions */
-.dashboard-command-strip {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(190px, 1fr));
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.dashboard-command-card {
-  width: 100%;
-  min-height: 125px;
-  display: grid;
-  grid-template-columns: auto 1fr;
-  grid-template-rows: auto auto auto;
-  column-gap: 12px;
-  text-align: left;
-  align-items: center;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 13px;
-  padding: 15px;
-}
-
-.dashboard-command-card:hover {
-  border-color: var(--accent);
-  transform: translateY(-1px);
-}
-
-.dashboard-command-icon {
-  grid-row: 1 / 4;
-  font-size: 30px;
-}
-
-.dashboard-command-number {
-  font-size: 30px;
-  font-weight: 800;
-  line-height: 1;
-}
-
-.dashboard-command-label {
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.dashboard-command-action {
-  color: var(--text-muted);
-  font-size: 12px;
-}
-
-.working-card {
-  border-color: var(--accent);
-}
-
-.dashboard-main-grid {
-  display: grid;
-  grid-template-columns: minmax(300px, 0.9fr) minmax(360px, 1.1fr);
-  gap: 12px;
-}
-
-.dashboard-panel {
-  margin-bottom: 0;
-  min-width: 0;
-}
-
-.dashboard-crew-panel {
-  grid-column: 1 / -1;
-}
-
-.dashboard-panel-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 10px;
-}
-
-.dashboard-panel-header h3 {
-  margin: 0;
-}
-
-.dashboard-panel-header p {
-  margin: 3px 0 0;
-  color: var(--text-muted);
-  font-size: 12px;
-}
-
-.text-button {
-  width: auto;
-  min-width: auto;
-  padding: 5px 8px;
-  background: transparent;
-  border: none;
-  color: var(--accent);
-}
-
-.dashboard-list {
-  display: grid;
-  gap: 7px;
-}
-
-.dashboard-list-item {
-  width: 100%;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: 10px;
-  align-items: center;
-  text-align: left;
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 10px;
-}
-
-.dashboard-list-item:hover {
-  border-color: var(--accent);
-}
-
-.dashboard-list-icon {
-  font-size: 17px;
-}
-
-.dashboard-list-copy {
-  min-width: 0;
-}
-
-.dashboard-list-copy strong,
-.dashboard-list-copy span,
-.dashboard-list-copy small {
-  display: block;
-}
-
-.dashboard-list-copy strong {
-  font-size: 13px;
-}
-
-.dashboard-list-copy span {
-  color: var(--text-muted);
-  font-size: 12px;
-  margin-top: 3px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.dashboard-list-copy small {
-  color: var(--text-muted);
-  font-size: 10px;
-  margin-top: 4px;
-}
-
-.dashboard-chevron {
-  color: var(--text-muted);
-  font-size: 24px;
-}
-
-.dashboard-employee-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(215px, 1fr));
-  gap: 8px;
-}
-
-.dashboard-employee-button {
-  width: 100%;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 10px;
-  align-items: center;
-  text-align: left;
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 10px;
-}
-
-.dashboard-employee-button:hover {
-  border-color: var(--accent);
-}
-
-.dashboard-avatar {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: var(--accent);
-  color: white;
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.dashboard-employee-copy {
-  min-width: 0;
-}
-
-.dashboard-employee-copy strong,
-.dashboard-employee-copy span {
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.dashboard-employee-copy strong {
-  font-size: 13px;
-}
-
-.dashboard-employee-copy span {
-  color: var(--text-muted);
-  font-size: 11px;
-  margin-top: 3px;
-}
-
-.dashboard-empty {
-  padding: 12px 0;
-}
-
-.dashboard-modal {
-  display: none;
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  background: rgba(0, 0, 0, 0.62);
-  padding: 30px;
-  align-items: center;
-  justify-content: center;
-}
-
-.dashboard-modal.open {
-  display: flex;
-}
-
-.dashboard-modal-content {
-  width: min(620px, 100%);
-  max-height: 82vh;
-  overflow: auto;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 16px;
-}
-
-.dashboard-modal-header {
-  display: flex;
-  justify-content: space-between;
-  gap: 15px;
-  align-items: flex-start;
-  margin-bottom: 12px;
-}
-
-.dashboard-modal-header h3 {
-  margin: 0;
-}
-
-.dashboard-modal-header p {
-  margin: 4px 0 0;
-  color: var(--text-muted);
-  font-size: 12px;
-}
-
-.modal-close-button {
-  width: 34px;
-  min-width: 34px;
-  height: 34px;
-  padding: 0;
-  font-size: 22px;
-}
-
-.working-today-list {
-  display: grid;
-  gap: 8px;
-}
-
-.working-today-person {
-  width: 100%;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: 10px;
-  align-items: center;
-  text-align: left;
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 11px;
-}
-
-.working-today-person:hover {
-  border-color: var(--accent);
-}
-
-.working-today-person strong,
-.working-today-person small {
-  display: block;
-}
-
-.working-today-person small {
-  color: var(--text-muted);
-  margin-top: 3px;
-}
-
-.working-status-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #22c55e;
-  box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.13);
-}
-
-@media (max-width: 1000px) {
-  .dashboard-command-strip {
-    grid-template-columns: 1fr;
-  }
-
-  .dashboard-main-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .dashboard-crew-panel {
-    grid-column: auto;
-  }
-}
-/* Employee 360 clickable summary cards — v22.3 */
-.employee-360-stat-link {
-  width: 100%;
-  min-width: 0;
-  text-align: left;
-  cursor: pointer;
-  position: relative;
-  color: inherit;
-}
-
-.employee-360-stat-link:hover {
-  border-color: var(--accent);
-  transform: translateY(-1px);
-}
-
-.employee-360-stat-link:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-.employee-360-card-action {
-  margin-top: 8px;
-  color: var(--text-muted);
-  font-size: 10px;
-  opacity: 0;
-  transition: opacity 0.15s ease;
-}
-
-.employee-360-stat-link:hover .employee-360-card-action,
-.employee-360-stat-link:focus-visible .employee-360-card-action {
-  opacity: 1;
-}
-
-.employee-360-detail-panel {
-  margin-top: 12px;
-}
-
-.employee-360-detail-panel[hidden] {
-  display: none;
-}
-
-.employee-360-detail-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 14px;
-  margin-bottom: 12px;
-}
-
-.employee-360-close {
-  width: 34px;
-  min-width: 34px;
-  height: 34px;
-  padding: 0;
-  font-size: 22px;
-}
-
-.employee-360-detail-list {
-  display: grid;
-  gap: 9px;
-}
-
-.employee-360-detail-item {
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 11px;
-}
-
-.employee-360-detail-item-header {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.employee-360-detail-item-header span,
-.employee-360-detail-meta {
-  color: var(--text-muted);
-  font-size: 12px;
-}
-
-.employee-360-detail-item p {
-  margin: 8px 0 0;
-  white-space: pre-wrap;
-}
-
-.employee-360-recent-item {
-  width: 100%;
-  display: block;
-  text-align: left;
-  color: inherit;
-}
-
-.employee-360-recent-item:hover {
-  border-color: var(--accent);
-}
-/* Timeline note-entry layout */
-.timeline-note-entry {
-  margin: 14px 0 18px;
-  padding: 14px;
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-}
-
-.timeline-note-entry h4 {
-  margin: 0 0 10px;
-}
-
-.timeline-note-entry textarea {
-  min-height: 110px;
-  margin-top: 10px;
-}
-
-.timeline-note-entry button {
-  width: auto;
-  margin-top: 10px;
-}
-
-.timeline-review-tools {
-  margin-bottom: 14px;
-}
-/* Roll Call module */
-.roll-call-form-header,
-.roll-call-filter-header,
-.roll-call-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 14px;
-}
-
-.roll-call-close {
-  width: 34px;
-  min-width: 34px;
-  height: 34px;
-  padding: 0;
-  font-size: 22px;
-}
-
-.roll-call-checkbox {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 42px;
-}
-
-.roll-call-checkbox input {
-  width: auto;
-}
-
-.roll-call-form-actions,
-.roll-call-card-actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.roll-call-form-actions {
-  margin-top: 10px;
-}
-
-.roll-call-form-actions button,
-.roll-call-card-actions button {
-  width: auto;
-  min-width: 0;
-}
-
-.roll-call-section {
-  margin-top: 18px;
-}
-
-.roll-call-items {
-  display: grid;
-  gap: 10px;
-}
-
-.roll-call-card {
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  border-radius: 11px;
-  padding: 13px;
-}
-
-.roll-call-card:hover {
-  border-color: var(--accent);
-}
-
-.roll-call-pinned {
-  border-color: var(--accent);
-}
-
-.roll-call-expired {
-  opacity: 0.7;
-}
-
-.roll-call-badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 7px;
-}
-
-.roll-call-badge {
-  display: inline-flex;
-  align-items: center;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  padding: 3px 7px;
-  font-size: 10px;
-  color: var(--text-muted);
-}
-
-.roll-call-badge.pinned {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-.roll-call-badge.priority-high,
-.roll-call-badge.priority-critical,
-.roll-call-badge.expired {
-  font-weight: 700;
-}
-
-.roll-call-badge.priority-critical {
-  color: #ef4444;
-}
-
-.roll-call-badge.priority-high {
-  color: #f59e0b;
-}
-
-.roll-call-message {
-  white-space: pre-wrap;
-  margin: 10px 0;
-}
-
-.roll-call-expiration {
-  margin-bottom: 0;
-}
-
-.roll-call-empty {
-  padding: 16px 0;
-}
-
-.roll-call-copy-modal {
-  position: fixed;
-  inset: 0;
-  z-index: 1200;
-  display: grid;
-  place-items: center;
-  background: rgba(0, 0, 0, 0.65);
-  padding: 24px;
-}
-
-.roll-call-copy-content {
-  width: min(760px, 100%);
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 16px;
-}
-
-.roll-call-copy-content textarea {
-  min-height: 420px;
-}
-
-@media (max-width: 760px) {
-  .roll-call-card-header,
-  .roll-call-form-header {
-    display: block;
-  }
-
-  .roll-call-card-actions {
-    margin-top: 10px;
-  }
-}
-/* Roll Call module */
-.roll-call-form-header,
-.roll-call-filter-header,
-.roll-call-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 14px;
-}
-
-.roll-call-close {
-  width: 34px;
-  min-width: 34px;
-  height: 34px;
-  padding: 0;
-  font-size: 22px;
-}
-
-.roll-call-checkbox {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 42px;
-}
-
-.roll-call-checkbox input {
-  width: auto;
-}
-
-.roll-call-form-actions,
-.roll-call-card-actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.roll-call-form-actions {
-  margin-top: 10px;
-}
-
-.roll-call-form-actions button,
-.roll-call-card-actions button {
-  width: auto;
-  min-width: 0;
-}
-
-.roll-call-section {
-  margin-top: 18px;
-}
-
-.roll-call-items {
-  display: grid;
-  gap: 10px;
-}
-
-.roll-call-card {
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  border-radius: 11px;
-  padding: 13px;
-}
-
-.roll-call-card:hover {
-  border-color: var(--accent);
-}
-
-.roll-call-pinned {
-  border-color: var(--accent);
-}
-
-.roll-call-expired {
-  opacity: 0.7;
-}
-
-.roll-call-badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 7px;
-}
-
-.roll-call-badge {
-  display: inline-flex;
-  align-items: center;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  padding: 3px 7px;
-  font-size: 10px;
-  color: var(--text-muted);
-}
-
-.roll-call-badge.pinned {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-.roll-call-badge.priority-high,
-.roll-call-badge.priority-critical,
-.roll-call-badge.expired {
-  font-weight: 700;
-}
-
-.roll-call-badge.priority-critical {
-  color: #ef4444;
-}
-
-.roll-call-badge.priority-high {
-  color: #f59e0b;
-}
-
-.roll-call-message {
-  white-space: pre-wrap;
-  margin: 10px 0;
-}
-
-.roll-call-expiration {
-  margin-bottom: 0;
-}
-
-.roll-call-empty {
-  padding: 16px 0;
-}
-
-.roll-call-copy-modal {
-  position: fixed;
-  inset: 0;
-  z-index: 1200;
-  display: grid;
-  place-items: center;
-  background: rgba(0, 0, 0, 0.65);
-  padding: 24px;
-}
-
-.roll-call-copy-content {
-  width: min(760px, 100%);
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 16px;
-}
-
-.roll-call-copy-content textarea {
-  min-height: 420px;
-}
-
-@media (max-width: 760px) {
-  .roll-call-card-header,
-  .roll-call-form-header {
-    display: block;
-  }
-
-  .roll-call-card-actions {
-    margin-top: 10px;
-  }
-}
-/* Daily Roll Call module */
-.roll-call-header-row,
-.roll-call-editor-heading,
-.roll-call-section-heading,
-.roll-call-topic-heading,
-.roll-call-library-card-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 14px;
-}
-
-.roll-call-icon-button {
-  width: 34px;
-  min-width: 34px;
-  height: 34px;
-  padding: 0;
-  font-size: 22px;
-}
-
-.roll-call-form-actions,
-.roll-call-editor-actions,
-.roll-call-section-actions,
-.roll-call-topic-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.roll-call-form-actions {
-  margin-top: 10px;
-}
-
-.roll-call-form-actions button,
-.roll-call-editor-actions button,
-.roll-call-section-actions button,
-.roll-call-topic-actions button {
-  width: auto;
-  min-width: 0;
-}
-
-.roll-call-library-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(225px, 1fr));
-  gap: 10px;
-  margin-top: 14px;
-}
-
-.roll-call-library-card {
-  width: 100%;
-  min-height: 175px;
-  text-align: left;
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  border-radius: 11px;
-  padding: 13px;
-  color: inherit;
-}
-
-.roll-call-library-card:hover {
-  border-color: var(--accent);
-  transform: translateY(-1px);
-}
-
-.roll-call-status {
-  display: inline-flex;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  padding: 3px 7px;
-  font-size: 10px;
-}
-
-.roll-call-status.final {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-.roll-call-editor-heading {
-  margin-bottom: 14px;
-}
-
-.roll-call-section-card {
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  border-radius: 11px;
-  padding: 13px;
-  margin-top: 11px;
-}
-
-.roll-call-topic-list {
-  display: grid;
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.roll-call-topic-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-left-width: 4px;
-  border-radius: 9px;
-  padding: 11px;
-}
-
-.roll-call-topic-card.priority-high {
-  border-left-color: #f59e0b;
-}
-
-.roll-call-topic-card.priority-critical {
-  border-left-color: #ef4444;
-}
-
-.roll-call-topic-card p {
-  white-space: pre-wrap;
-  margin: 8px 0;
-}
-
-.roll-call-topic-heading span {
-  display: block;
-  color: var(--text-muted);
-  font-size: 11px;
-  margin-top: 3px;
-}
-
-.roll-call-modal {
-  display: none;
-  position: fixed;
-  inset: 0;
-  z-index: 1300;
-  background: rgba(0, 0, 0, 0.66);
-  padding: 26px;
-  align-items: center;
-  justify-content: center;
-}
-
-.roll-call-modal.open {
-  display: flex;
-}
-
-.roll-call-modal-content {
-  width: min(760px, 100%);
-  max-height: 86vh;
-  overflow: auto;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 13px;
-  padding: 16px;
-}
-
-.roll-call-checkbox {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 42px;
-}
-
-.roll-call-checkbox input {
-  width: auto;
-}
-
-.carry-forward-list {
-  display: grid;
-  gap: 8px;
-  margin: 14px 0;
-}
-
-.carry-forward-item {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  align-items: center;
-  gap: 10px;
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  border-radius: 9px;
-  padding: 10px;
-}
-
-.carry-forward-item input {
-  width: auto;
-}
-
-.carry-forward-item strong,
-.carry-forward-item small {
-  display: block;
-}
-
-.carry-forward-item small {
-  color: var(--text-muted);
-  margin-top: 3px;
-}
-
-.roll-call-empty {
-  padding: 15px 0;
-}
-
-@media (max-width: 800px) {
-  .roll-call-editor-heading,
-  .roll-call-section-heading,
-  .roll-call-topic-heading {
-    display: block;
-  }
-
-  .roll-call-editor-actions,
-  .roll-call-section-actions,
-  .roll-call-topic-actions {
-    margin-top: 10px;
-  }
-}
-/* Smart Email Import */
-.smart-email-source {
-  min-height: 220px;
-}
-
-.smart-rule-list,
-.smart-suggestion-list {
-  display: grid;
-  gap: 10px;
-  margin-top: 14px;
-}
-
-.smart-rule-card,
-.smart-suggestion-card {
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 12px;
-}
-
-.smart-rule-card .danger-btn {
-  width: auto;
-  min-width: 0;
-  margin-top: 8px;
-}
-
-.smart-suggestion-header {
-  margin-top: 18px;
-}
-
-.smart-suggestion-card textarea {
-  min-height: 100px;
-  margin-top: 10px;
-}
-
-.smart-original-email {
-  margin-top: 10px;
-  color: var(--text-muted);
-}
-
-.smart-original-email p {
-  white-space: pre-wrap;
-}
-
-.smart-duplicate-warning {
-  margin-top: 12px;
-  padding: 12px;
-  border: 1px solid #f59e0b;
-  border-radius: 10px;
-  background: rgba(245, 158, 11, 0.08);
-}
-
-.smart-duplicate-warning p {
-  margin: 7px 0 0;
-}
-
-.roll-call-topic-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 8px;
-}
-/* Schedule times and dashboard week view */
-.schedule-all-day-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 42px;
-}
-
-.schedule-all-day-label input {
-  width: auto;
-}
-
-.schedule-time-shortcuts {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
-  margin: 8px 0;
-}
-
-.schedule-time-shortcuts button {
-  width: auto;
-  min-width: 0;
-  padding: 5px 8px;
-  font-size: 11px;
-}
-
-.calendar-entry-time {
-  display: block;
-  margin-top: 2px;
-  font-size: 10px;
-  opacity: 0.85;
-}
-
-.dashboard-week-view {
-  display: grid;
-  grid-template-columns: repeat(7, minmax(110px, 1fr));
-  gap: 7px;
-  overflow-x: auto;
-  padding-bottom: 3px;
-}
-
-.dashboard-week-day {
-  min-width: 110px;
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-.dashboard-week-day.today {
-  border-color: var(--accent);
-}
-
-.dashboard-week-day-header {
-  width: 100%;
-  min-width: 0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px;
-  background: transparent;
-  border: none;
-  color: inherit;
-}
-
-.dashboard-week-day-header span {
-  color: var(--text-muted);
-  font-size: 11px;
-}
-
-.dashboard-week-day-entries {
-  display: grid;
-  gap: 5px;
-  padding: 7px;
-}
-
-.dashboard-week-entry {
-  width: 100%;
-  min-width: 0;
-  text-align: left;
-  padding: 7px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-left-width: 4px;
-  border-radius: 7px;
-  color: inherit;
-}
-
-.dashboard-week-entry strong,
-.dashboard-week-entry span,
-.dashboard-week-entry small {
-  display: block;
-}
-
-.dashboard-week-entry strong {
-  font-size: 11px;
-}
-
-.dashboard-week-entry span,
-.dashboard-week-entry small {
-  color: var(--text-muted);
-  font-size: 10px;
-  margin-top: 2px;
-}
-
-.dashboard-week-entry.schedule-vacation {
-  border-left-color: #22c55e;
-}
-
-.dashboard-week-entry.schedule-sick {
-  border-left-color: #ef4444;
-}
-
-.dashboard-week-entry.schedule-training {
-  border-left-color: #3b82f6;
-}
-
-.dashboard-week-entry.schedule-court {
-  border-left-color: #eab308;
-}
-
-.dashboard-week-entry.schedule-overtime {
-  border-left-color: #a855f7;
-}
-
-.dashboard-week-entry.schedule-holiday {
-  border-left-color: #f97316;
-}
-
-.dashboard-week-entry.schedule-rdo {
-  border-left-color: #94a3b8;
-}
-
-.dashboard-week-entry.schedule-other {
-  border-left-color: var(--accent);
-}
-
-.dashboard-week-empty {
-  color: var(--text-muted);
-  font-size: 10px;
-  padding: 5px 0;
-}
-
-@media (max-width: 1100px) {
-  .dashboard-week-view {
-    grid-template-columns: repeat(7, 130px);
+  return store;
+}
+
+async function applySavedAppAppearance() {
+  try {
+    const appearance = await getAppAppearance();
+    applyAppAppearance(appearance);
+  } catch (error) {
+    console.warn("App appearance not applied:", error);
   }
 }
 
-
-
-/* Simplified app appearance */
-.department-app-brand {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  flex: 0 0 44px;
-  margin-right: 12px;
-  padding-right: 12px;
-  border-right: 1px solid var(--border);
+// Kept as an alias so existing startup code and older backups remain compatible.
+async function applySavedDepartmentBranding() {
+  return applySavedAppAppearance();
 }
 
-.department-app-brand img {
-  max-width: 34px;
-  max-height: 34px;
-  object-fit: contain;
+function applyAppAppearance(appearance = {}) {
+  const resolved = { ...DEFAULT_APP_APPEARANCE, ...appearance };
+  const theme = APP_THEME_PRESETS[resolved.theme] || APP_THEME_PRESETS.midnight;
+  const accent = APP_ACCENT_PRESETS[resolved.accent] || APP_ACCENT_PRESETS.blue;
+  const root = document.documentElement;
+  root.style.setProperty("--bg-main", theme.colors.bgMain);
+  root.style.setProperty("--bg-panel", theme.colors.bgPanel);
+  root.style.setProperty("--bg-card", theme.colors.bgCard);
+  root.style.setProperty("--bg-card-light", theme.colors.bgCardLight);
+  root.style.setProperty("--bg-input", theme.colors.bgInput);
+  root.style.setProperty("--text-main", theme.colors.textMain);
+  root.style.setProperty("--text-muted", theme.colors.textMuted);
+  root.style.setProperty("--border", theme.colors.border);
+  root.style.setProperty("--accent", accent.value);
+  root.style.setProperty("--accent-hover", accent.hover);
+  document.body.dataset.theme = resolved.theme;
+  document.body.dataset.fontSize = resolved.fontSize;
+  document.body.dataset.density = resolved.density;
+  document.body.dataset.cardStyle = resolved.cardStyle;
+  document.body.dataset.sidebarSize = resolved.sidebarSize;
+  const header = document.querySelector(".app-header");
+  if (!header) return;
+  document.getElementById("departmentAppBrand")?.remove();
+  const title = header.querySelector("h1");
+  const subtitle = header.querySelector("p");
+  if (title) title.textContent = resolved.appName || DEFAULT_APP_APPEARANCE.appName;
+  if (subtitle) subtitle.textContent = resolved.departmentName || "Local-only personnel, supervision, and shift management";
+  if (!resolved.showLogo || !resolved.appLogo) return;
+  const brand = document.createElement("div");
+  brand.id = "departmentAppBrand";
+  brand.className = "department-app-brand app-logo-only";
+  brand.innerHTML = `<img src="${resolved.appLogo}" alt="App logo">`;
+  header.insertBefore(brand, header.firstChild);
 }
 
-.app-logo-settings {
-  display: grid;
-  grid-template-columns: 150px minmax(0, 1fr);
-  gap: 16px;
-  align-items: center;
-  margin: 14px 0;
+async function loadEmployeeExportDropdown() {
+  const employees = await getAllRecords("employees");
+  const select = document.getElementById("exportEmployeeSelect");
+
+  select.innerHTML = `
+    <option value="">Select Employee</option>
+    ${employees.map(employee => `
+      <option value="${employee.id}">
+        ${employee.rank || ""} ${employee.firstName || ""} ${employee.lastName || ""}
+      </option>
+    `).join("")}
+  `;
 }
 
-.app-logo-preview {
-  height: 120px;
-  display: grid;
-  place-items: center;
-  background: var(--bg-input);
-  border: 1px dashed var(--border);
-  border-radius: 10px;
-  overflow: hidden;
+async function exportBackup() {
+  const employees = await getAllRecords("employees");
+
+  const backup = {
+    app: "Supervisor Command Center",
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    employees
+  };
+
+  downloadJsonFile(backup, `supervisor-command-center-backup-${getTodayFileDate()}.json`);
 }
 
-.app-logo-preview img {
-  max-width: 110px;
-  max-height: 100px;
-  object-fit: contain;
-}
+async function importBackup() {
+  const fileInput = document.getElementById("backupFile");
+  const file = fileInput.files[0];
 
-.app-logo-fallback {
-  width: 58px;
-  height: 58px;
-  display: grid;
-  place-items: center;
-  border-radius: 14px;
-  background: var(--accent);
-  color: white;
-  font-weight: 800;
-  letter-spacing: 1px;
-}
-
-.app-logo-controls button {
-  width: auto;
-  margin-top: 6px;
-}
-
-.secondary-btn {
-  background: var(--bg-card-light);
-  border: 1px solid var(--border);
-  color: var(--text-main);
-}
-
-.secondary-btn:hover {
-  background: var(--bg-input);
-}
-
-@media (max-width: 760px) {
-  .app-logo-settings {
-    grid-template-columns: 1fr;
+  if (!file) {
+    alert("Select a backup file first.");
+    return;
   }
 
-  .department-app-brand {
-    display: none;
-  }
-}
+  if (!confirm("Importing will replace current employee data in this browser. Continue?")) return;
 
+  const text = await file.text();
+  const backup = JSON.parse(text);
 
-/* Supervisor Timeline integrated into Employee 360 */
-.employee-profile-header {
-  margin-top: 12px;
-}
-
-.employee-profile-heading,
-.employee-360-summary-header,
-.employee-timeline-panel-header,
-.employee-timeline-event-top,
-.employee-timeline-event-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.employee-profile-heading {
-  justify-content: flex-start;
-}
-
-.employee-profile-heading h2,
-.employee-360-summary-header h3,
-.employee-timeline-panel-header h3,
-.employee-timeline-sidebar h3 {
-  margin: 0;
-}
-
-.employee-profile-avatar {
-  width: 58px;
-  height: 58px;
-  flex: 0 0 58px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: var(--bg-input);
-  border: 2px solid var(--border);
-  color: var(--accent);
-  font-size: 20px;
-  font-weight: 800;
-}
-
-.profile-tabs button.active {
-  background: var(--accent);
-  color: white;
-  border-color: var(--accent);
-}
-
-.employee-360-summary-header {
-  align-items: flex-start;
-  margin-bottom: 10px;
-}
-
-.employee-360-summary-header button {
-  width: auto;
-  white-space: nowrap;
-}
-
-.employee-360-stat-grid .stat-card {
-  min-height: 92px;
-}
-
-.employee-timeline-insights {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(120px, 1fr));
-  gap: 10px;
-  margin: 12px 0;
-}
-
-.employee-timeline-insight-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 13px;
-}
-
-.employee-timeline-insight-label,
-.employee-timeline-insight-note,
-.employee-timeline-time,
-.employee-timeline-event-footer {
-  color: var(--text-muted);
-  font-size: 11px;
-}
-
-.employee-timeline-insight-value {
-  margin-top: 8px;
-  color: var(--text-main);
-  font-size: 22px;
-  font-weight: 800;
-}
-
-.employee-timeline-insight-note {
-  margin-top: 4px;
-}
-
-.employee-timeline-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 285px;
-  gap: 12px;
-  align-items: start;
-}
-
-.employee-timeline-panel {
-  padding: 0;
-  overflow: hidden;
-}
-
-.employee-timeline-panel-header,
-.employee-timeline-toolbar {
-  padding: 14px;
-  border-bottom: 1px solid var(--border);
-}
-
-.employee-timeline-view-switch {
-  display: flex;
-  gap: 4px;
-  padding: 3px;
-  background: var(--bg-input);
-  border-radius: 8px;
-}
-
-.employee-timeline-view-switch button {
-  width: auto;
-  background: transparent;
-  color: var(--text-muted);
-  padding: 7px 10px;
-}
-
-.employee-timeline-view-switch button.active {
-  background: var(--bg-card-light);
-  color: var(--text-main);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.14);
-}
-
-.employee-timeline-search-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
-  gap: 8px;
-  align-items: center;
-}
-
-.employee-timeline-search-row input {
-  margin: 0;
-}
-
-.employee-timeline-search-row button {
-  width: auto;
-  white-space: nowrap;
-}
-
-.employee-timeline-filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 10px;
-}
-
-.employee-timeline-filter {
-  width: auto;
-  padding: 6px 9px;
-  background: var(--bg-input);
-  color: var(--text-muted);
-  border: 1px solid var(--border);
-  font-size: 11px;
-}
-
-.employee-timeline-filter.active {
-  background: var(--accent);
-  color: white;
-  border-color: var(--accent);
-}
-
-#employeeTimelineResults,
-#employeeTimelineMonthly {
-  padding: 6px 14px 18px;
-}
-
-.employee-timeline-month-label {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 14px 0 10px;
-  font-size: 13px;
-  font-weight: 800;
-}
-
-.employee-timeline-month-label::after {
-  content: "";
-  height: 1px;
-  flex: 1;
-  background: var(--border);
-}
-
-.employee-timeline-event {
-  display: grid;
-  grid-template-columns: 46px 24px minmax(0, 1fr);
-  gap: 9px;
-}
-
-.employee-timeline-date {
-  padding-top: 7px;
-  text-align: right;
-}
-
-.employee-timeline-date strong,
-.employee-timeline-date span {
-  display: block;
-}
-
-.employee-timeline-date strong {
-  font-size: 15px;
-}
-
-.employee-timeline-date span {
-  color: var(--text-muted);
-  font-size: 10px;
-  text-transform: uppercase;
-}
-
-.employee-timeline-rail {
-  position: relative;
-  display: flex;
-  justify-content: center;
-}
-
-.employee-timeline-rail::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  background: var(--border);
-}
-
-.employee-timeline-icon {
-  position: relative;
-  z-index: 1;
-  width: 22px;
-  height: 22px;
-  margin-top: 7px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: var(--accent);
-  color: white;
-  font-size: 10px;
-  font-weight: 800;
-  box-shadow: 0 0 0 4px var(--bg-card);
-}
-
-.type-positive .employee-timeline-icon { background: #23845b; }
-.type-report .employee-timeline-icon { background: #2f6fa5; }
-.type-training .employee-timeline-icon { background: #7152a3; }
-.type-coaching .employee-timeline-icon { background: #a96a11; }
-.type-evaluation .employee-timeline-icon { background: #477a85; }
-.type-schedule .employee-timeline-icon { background: #586f89; }
-.type-file .employee-timeline-icon { background: #59636e; }
-.type-journal .employee-timeline-icon { background: #7a4d7c; }
-
-.employee-timeline-event-card {
-  margin-bottom: 11px;
-  padding: 12px;
-  background: var(--bg-card-light);
-  border: 1px solid var(--border);
-  border-radius: 11px;
-}
-
-.employee-timeline-event-card h4 {
-  margin: 6px 0;
-  font-size: 15px;
-}
-
-.employee-timeline-event-card p {
-  margin: 0;
-  color: var(--text-muted);
-  line-height: 1.45;
-  white-space: pre-wrap;
-}
-
-.employee-timeline-type {
-  color: var(--accent);
-  font-size: 11px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.employee-timeline-event-footer {
-  margin-top: 10px;
-  padding-top: 9px;
-  border-top: 1px solid var(--border);
-}
-
-.employee-timeline-sidebar {
-  padding: 0;
-  overflow: hidden;
-}
-
-.employee-timeline-sidebar section {
-  padding: 14px;
-  border-bottom: 1px solid var(--border);
-}
-
-.employee-timeline-sidebar section:last-child {
-  border-bottom: 0;
-}
-
-.employee-timeline-summary-box {
-  margin-top: 10px;
-  padding: 12px;
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  border-radius: 9px;
-  color: var(--text-muted);
-  font-size: 12px;
-  line-height: 1.5;
-}
-
-.employee-timeline-snapshot-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--border);
-  font-size: 12px;
-}
-
-.employee-timeline-snapshot-row:last-child {
-  border-bottom: 0;
-}
-
-.employee-timeline-quick-button {
-  width: 100%;
-  margin-top: 7px;
-  background: var(--bg-input);
-  color: var(--text-main);
-  border: 1px solid var(--border);
-  text-align: left;
-}
-
-.employee-timeline-quick-button:hover {
-  background: var(--accent);
-  color: white;
-}
-
-.employee-timeline-empty {
-  padding: 34px 10px;
-  color: var(--text-muted);
-  text-align: center;
-}
-
-.employee-timeline-month-summary {
-  margin-top: 14px;
-}
-
-.employee-timeline-month-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(100px, 1fr));
-  gap: 8px;
-}
-
-.employee-timeline-month-stat {
-  padding: 13px;
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-}
-
-.employee-timeline-month-stat strong,
-.employee-timeline-month-stat span {
-  display: block;
-}
-
-.employee-timeline-month-stat strong {
-  font-size: 22px;
-}
-
-.employee-timeline-month-stat span {
-  margin-top: 4px;
-  color: var(--text-muted);
-  font-size: 11px;
-}
-
-.timeline-private-option {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 8px 0 12px;
-  color: var(--text-muted);
-  font-size: 12px;
-}
-
-.timeline-private-option input {
-  width: auto;
-  margin: 0;
-}
-
-@media (max-width: 1100px) {
-  .employee-timeline-insights {
-    grid-template-columns: repeat(3, minmax(130px, 1fr));
+  if (!backup.employees || !Array.isArray(backup.employees)) {
+    alert("Invalid backup file.");
+    return;
   }
 
-  .employee-timeline-layout {
-    grid-template-columns: 1fr;
-  }
-}
+  await clearStore("employees");
 
-@media (max-width: 700px) {
-  .employee-profile-heading,
-  .employee-360-summary-header,
-  .employee-timeline-panel-header {
-    align-items: flex-start;
-    flex-direction: column;
+  for (const employee of backup.employees) {
+    await addRecord("employees", employee);
   }
 
-  .employee-timeline-insights {
-    grid-template-columns: repeat(2, minmax(120px, 1fr));
+  alert("Backup imported successfully.");
+  loadSettingsPage();
+}
+
+async function exportEmployeeJSON() {
+  const employee = await getSelectedExportEmployee();
+  if (!employee) return;
+
+  const exportData = {
+    app: "Supervisor Command Center",
+    exportType: "Single Employee",
+    exportedAt: new Date().toISOString(),
+    employee
+  };
+
+  const fileName = `${safeFileName(employee.lastName)}-${safeFileName(employee.firstName)}-employee-export-${getTodayFileDate()}.json`;
+  downloadJsonFile(exportData, fileName);
+}
+
+async function importEmployeeJSON() {
+  const fileInput = document.getElementById("employeeJsonFile");
+  const file = fileInput.files[0];
+
+  if (!file) {
+    alert("Select an employee JSON file first.");
+    return;
   }
 
-  .employee-timeline-search-row {
-    grid-template-columns: 1fr;
+  const text = await file.text();
+  const data = JSON.parse(text);
+
+  if (!data.employee) {
+    alert("Invalid employee export file.");
+    return;
   }
 
-  .employee-timeline-event {
-    grid-template-columns: 38px 20px minmax(0, 1fr);
+  const employee = data.employee;
+  delete employee.id;
+
+  employee.importedAt = new Date().toISOString();
+  employee.updatedAt = new Date().toISOString();
+
+  await addRecord("employees", employee);
+
+  alert("Employee imported successfully.");
+  loadSettingsPage();
+}
+
+async function exportEmployeePDF() {
+  const employee = await getSelectedExportEmployee();
+  if (!employee) return;
+
+  const html = buildEmployeePDFHtml(employee);
+
+  const printWindow = window.open("", "_blank");
+  printWindow.document.write(html);
+  printWindow.document.close();
+  printWindow.focus();
+
+  setTimeout(() => printWindow.print(), 600);
+}
+
+async function getSelectedExportEmployee() {
+  const id = Number(document.getElementById("exportEmployeeSelect").value);
+
+  if (!id) {
+    alert("Select an employee first.");
+    return null;
   }
 
-  .employee-timeline-month-grid {
-    grid-template-columns: repeat(2, minmax(100px, 1fr));
-  }
+  const employees = await getAllRecords("employees");
+  return employees.find(e => e.id === id);
 }
 
-/* App Lock */
-body.app-is-locked {
-  overflow: hidden;
+function buildEmployeePDFHtml(employee) {
+  const activity = employee.activity || [];
+  const performance = employee.performance || [];
+  const reportReviews = employee.reportReviews || [];
+  const training = employee.training || [];
+  const schedule = employee.schedule || [];
+  const evaluations = employee.evaluations || [];
+  const files = getEmployeeFilesForPDF(employee);
+
+  const letterhead = `
+    <header class="plain-document-header">
+      <h1>Employee Summary</h1>
+      <p>Generated by Supervisor Command Center</p>
+    </header>
+  `;
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>${escapeSettingsHtml(employee.firstName || "")} ${escapeSettingsHtml(employee.lastName || "")} Export</title>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          color: #111827;
+          margin: 26px 34px;
+          line-height: 1.4;
+        }
+
+        .plain-document-header {
+          text-align: center;
+          border-bottom: 2px solid #111827;
+          padding-bottom: 12px;
+          margin-bottom: 22px;
+        }
+        .plain-document-header h1 { margin: 0; }
+        .plain-document-header p { margin: 5px 0 0; color: #555; font-size: 12px; }
+
+        h2 {
+          border-bottom: 2px solid #111827;
+          padding-bottom: 4px;
+          margin-top: 28px;
+        }
+
+        h3 { margin-bottom: 4px; }
+        .muted { color: #555; }
+        .grid {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 8px;
+          margin-top: 12px;
+        }
+        .box {
+          border: 1px solid #ccc;
+          padding: 8px;
+          border-radius: 6px;
+        }
+        .entry {
+          border-bottom: 1px solid #ddd;
+          padding: 8px 0;
+          break-inside: avoid;
+        }
+        .small {
+          font-size: 12px;
+          color: #555;
+        }
+        @media print {
+          button { display: none; }
+          body { margin: 0.35in; }
+        }
+      </style>
+    </head>
+    <body>
+      <button onclick="window.print()">Print / Save as PDF</button>
+
+      ${letterhead}
+
+      <h1>${escapeSettingsHtml(employee.rank || "")} ${escapeSettingsHtml(employee.firstName || "")} ${escapeSettingsHtml(employee.lastName || "")}</h1>
+      <p class="small">Exported: ${new Date().toLocaleString()}</p>
+
+      <h2>Employee Information</h2>
+      <div class="grid">
+        <div class="box"><strong>Badge:</strong><br>${escapeSettingsHtml(employee.badge || "N/A")}</div>
+        <div class="box"><strong>Assignment:</strong><br>${escapeSettingsHtml(employee.assignment || "N/A")}</div>
+        <div class="box"><strong>Phone:</strong><br>${escapeSettingsHtml(employee.phone || "N/A")}</div>
+        <div class="box"><strong>Email:</strong><br>${escapeSettingsHtml(employee.email || "N/A")}</div>
+        <div class="box"><strong>Hire Date:</strong><br>${escapeSettingsHtml(employee.hireDate || "N/A")}</div>
+      </div>
+
+      <h2>General Notes</h2>
+      <p>${escapeSettingsHtml(employee.notes || "No general notes entered.")}</p>
+
+      <h2>Performance Entries</h2>
+      ${renderPdfEntries(performance.map(item => ({
+        title: `${item.category || "Performance"} — ${item.rating || ""}`,
+        date: item.date || item.createdAt,
+        body: `${item.type || ""}: ${item.notes || ""}`
+      })))}
+
+      <h2>Report Reviews</h2>
+      ${renderPdfEntries(reportReviews.map(item => ({
+        title: `${item.caseNumber || "Case"} — ${item.reportType || ""}`,
+        date: item.reviewDate || item.createdAt,
+        body: `Rating: ${item.rating || "N/A"} | Returned: ${item.returnedForCorrection || "N/A"}<br>Issues: ${(item.issues || []).join(", ") || "None"}<br>${item.notes || ""}`
+      })))}
+
+      <h2>Training / Certifications</h2>
+      ${renderPdfEntries(training.map(item => ({
+        title: item.name || "Training",
+        date: item.completedDate || item.createdAt,
+        body: `Provider: ${item.provider || "N/A"} | Expires: ${item.expiresDate || "N/A"}<br>${item.notes || ""}`
+      })))}
+
+      <h2>Schedule / Days Off</h2>
+      ${renderPdfEntries(schedule.map(item => ({
+        title: item.type || "Schedule Entry",
+        date: item.startDate || item.createdAt,
+        body: `${item.startDate || ""} to ${item.endDate || item.startDate || ""}${item.startTime || item.endTime ? ` | ${item.startTime || ""}-${item.endTime || ""}` : ""} | Hours: ${item.hours || "N/A"}<br>${item.notes || ""}`
+      })))}
+
+      <h2>Evaluations</h2>
+      ${renderPdfEntries(evaluations.map(item => ({
+        title: `${item.type || "Evaluation"} — ${item.status || ""}`,
+        date: item.dueDate || item.createdAt,
+        body: `Period: ${item.periodStart || "N/A"} to ${item.periodEnd || "N/A"}<br>Supervisor Goals: ${item.supervisorGoals || "N/A"}<br>Employee Goals: ${item.employeeGoals || "N/A"}<br>Comments: ${item.comments || "N/A"}`
+      })))}
+
+      <h2>Files</h2>
+      ${renderPdfEntries(files.map(item => ({
+        title: `${item.title || "File"} — ${item.category || ""}`,
+        date: item.createdAt,
+        body: `File Name: ${item.fileName || "N/A"}<br>Notes: ${item.notes || "N/A"}`
+      })))}
+
+      <h2>Timeline</h2>
+      ${renderPdfEntries(activity
+        .slice()
+        .sort((a, b) => new Date(b.date) - new Date(a.date))
+        .map(item => ({
+          title: item.type || "Activity",
+          date: item.date,
+          body: item.note || ""
+        })))}
+    </body>
+    </html>
+  `;
 }
 
-body.app-is-locked > .app-header,
-body.app-is-locked > #container {
-  visibility: hidden;
-  pointer-events: none;
-  user-select: none;
+function renderPdfEntries(entries) {
+  if (!entries?.length) return `<p class="muted">No records.</p>`;
+
+  return entries.map(item => `
+    <div class="entry">
+      <h3>${escapeSettingsHtml(item.title)}</h3>
+      <div class="small">${item.date ? new Date(item.date).toLocaleString() : "No date"}</div>
+      <p>${sanitizePdfBody(item.body || "")}</p>
+    </div>
+  `).join("");
 }
 
-.app-lock-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 100000;
-  display: grid;
-  place-items: center;
-  padding: 24px;
-  overflow: auto;
-  background:
-    radial-gradient(circle at top, rgba(37, 99, 235, 0.20), transparent 38%),
-    linear-gradient(180deg, #020617 0%, #0f172a 100%);
+function sanitizePdfBody(value) {
+  return escapeSettingsHtml(value).replaceAll("&lt;br&gt;", "<br>");
 }
 
-.app-lock-card {
-  width: min(440px, 100%);
-  padding: 30px;
-  background: #111827;
-  border: 1px solid #334155;
-  border-radius: 18px;
-  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.5);
+async function clearAllLocalData() {
+  if (!confirm("This will delete all employee data stored in this browser. Continue?")) return;
+  if (!confirm("Final warning. This cannot be undone unless you have a backup.")) return;
+
+  await clearStore("employees");
+  alert("All local employee data has been cleared.");
+  loadSettingsPage();
 }
 
-.app-lock-emblem {
-  width: 62px;
-  height: 62px;
-  display: grid;
-  place-items: center;
-  margin: 0 auto 18px;
-  border-radius: 16px;
-  background: #2563eb;
-  color: #fff;
-  font-size: 17px;
-  font-weight: 800;
-  letter-spacing: 1px;
+function downloadJsonFile(data, filename) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], {
+    type: "application/json"
+  });
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = filename;
+  link.click();
+
+  URL.revokeObjectURL(url);
 }
 
-.app-lock-card h1 {
-  margin: 0;
-  text-align: center;
-  font-size: 26px;
+function getTodayFileDate() {
+  return new Date().toISOString().slice(0, 10);
 }
 
-.app-lock-card > p {
-  margin: 8px 0 24px;
-  color: #9ca3af;
-  text-align: center;
-  line-height: 1.5;
+function safeFileName(value) {
+  return (value || "employee")
+    .toString()
+    .replace(/[^a-z0-9]/gi, "-")
+    .toLowerCase();
 }
 
-.app-lock-card label {
-  display: block;
-  margin-bottom: 6px;
-  color: #dbeafe;
-  font-size: 13px;
-  font-weight: 700;
+function getEmployeeFilesForPDF() {
+  return [];
 }
 
-.app-lock-input-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 8px;
-  align-items: center;
+function escapeSettingsHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
-
-.app-lock-input-row input {
-  min-width: 0;
-  margin: 0;
-}
-
-.app-password-toggle {
-  width: auto !important;
-  min-width: 68px;
-  margin: 0 !important;
-  white-space: nowrap;
-}
-
-.app-lock-error {
-  min-height: 20px;
-  margin: 9px 0 5px;
-  color: #fca5a5;
-  font-size: 13px;
-}
-
-.app-unlock-button {
-  width: 100%;
-  margin-top: 4px;
-  padding: 11px 14px;
-}
-
-.app-lock-note {
-  margin-top: 18px;
-  color: #64748b;
-  text-align: center;
-  font-size: 11px;
-}
-
-.security-settings-heading {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.security-settings-heading h3 {
-  margin-bottom: 4px;
-}
-
-.security-status {
-  flex: 0 0 auto;
-  padding: 5px 9px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 800;
-}
-
-.security-status.enabled {
-  background: rgba(34, 197, 94, 0.14);
-  color: #86efac;
-  border: 1px solid rgba(34, 197, 94, 0.32);
-}
-
-.security-status.disabled {
-  background: rgba(148, 163, 184, 0.12);
-  color: #cbd5e1;
-  border: 1px solid rgba(148, 163, 184, 0.24);
-}
-
-.security-current-state {
-  margin: 14px 0;
-  padding: 10px 12px;
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  border-radius: 9px;
-}
-
-.security-form-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 12px;
-}
-
-.security-help,
-.security-message {
-  color: var(--text-muted);
-  font-size: 12px;
-}
-
-.security-message.error {
-  color: #fca5a5;
-}
-
-.security-message.success {
-  color: #86efac;
-}
-
-@media (max-width: 560px) {
-  .app-lock-card {
-    padding: 22px;
-  }
-
-  .app-lock-card h1 {
-    font-size: 22px;
-  }
-}
-
