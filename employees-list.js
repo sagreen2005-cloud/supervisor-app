@@ -12,18 +12,52 @@ async function loadEmployeesPage() {
     <section class="card">
       <h3>Add Employee</h3>
 
-      <div class="form-grid">
-        <input id="firstName" placeholder="First Name" />
-        <input id="lastName" placeholder="Last Name" />
-        <input id="badge" placeholder="Badge Number" />
-        <input id="rank" placeholder="Rank" />
-        <input id="phone" placeholder="Phone Number" />
-        <input id="email" placeholder="Email" />
-        <input id="assignment" placeholder="Assignment / Shift" />
-        <input id="hireDate" type="date" />
+      <div class="form-grid labeled-form-grid">
+        <label class="form-field">
+          <span>First Name <strong class="required-mark">*</strong></span>
+          <input id="firstName" autocomplete="given-name" />
+        </label>
+
+        <label class="form-field">
+          <span>Last Name <strong class="required-mark">*</strong></span>
+          <input id="lastName" autocomplete="family-name" />
+        </label>
+
+        <label class="form-field">
+          <span>Badge Number</span>
+          <input id="badge" />
+        </label>
+
+        <label class="form-field">
+          <span>Rank</span>
+          <input id="rank" />
+        </label>
+
+        <label class="form-field">
+          <span>Phone Number</span>
+          <input id="phone" type="tel" autocomplete="tel" />
+        </label>
+
+        <label class="form-field">
+          <span>Email</span>
+          <input id="email" type="email" autocomplete="email" />
+        </label>
+
+        <label class="form-field">
+          <span>Assignment / Shift</span>
+          <input id="assignment" />
+        </label>
+
+        <label class="form-field">
+          <span>Hire Date</span>
+          <input id="hireDate" type="date" />
+        </label>
       </div>
 
-      <textarea id="employeeNotes" placeholder="General notes / quick reference information"></textarea>
+      <label class="form-field form-field-full">
+        <span>General Notes</span>
+        <textarea id="employeeNotes" placeholder="Quick-reference information, assignment details, or other general notes"></textarea>
+      </label>
 
       <button id="saveEmployeeBtn">Save Employee</button>
     </section>
