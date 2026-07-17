@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", async () => {
   await openDatabase();
 
-  await applySavedDepartmentBranding();
+  await applySavedAppAppearance();
 
   showPage("dashboard");
 });
