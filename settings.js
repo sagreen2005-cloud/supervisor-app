@@ -58,6 +58,8 @@ async function loadSettingsPage() {
       </div>
     </section>
 
+    <div id="securitySettingsMount"></div>
+
     <section class="card">
       <h3>Export Full Backup</h3>
       <p class="muted">Downloads a full local backup containing employee records, Roll Calls, Smart Import rules, and app settings.</p>
@@ -99,6 +101,7 @@ async function loadSettingsPage() {
 
   loadEmployeeExportDropdown();
   wireAppLogoInput();
+  renderSecuritySettingsSection();
 }
 
 function wireAppLogoInput() {
