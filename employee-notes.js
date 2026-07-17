@@ -17,7 +17,6 @@ function loadAddNoteTab() {
           <option value="Counseling">Counseling</option>
           <option value="Discipline">Discipline</option>
           <option value="Training">Training</option>
-          <option value="Equipment">Equipment</option>
           <option value="Citizen Compliment">Citizen Compliment</option>
           <option value="Citizen Complaint">Citizen Complaint</option>
           <option value="General Note">General Note</option>
@@ -519,7 +518,6 @@ function getDefaultTimelineTitle(type) {
     "Counseling": "Counseling Note",
     "Discipline": "Disciplinary Entry",
     "Training": "Training Note",
-    "Equipment": "Equipment Note",
     "Citizen Compliment": "Citizen Compliment",
     "Citizen Complaint": "Citizen Complaint",
     "General Note": "Supervisor Note"
