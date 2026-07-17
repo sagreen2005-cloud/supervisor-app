@@ -1828,3 +1828,64 @@ body[data-sidebar-size="compact"] .sidebar button { padding:7px 8px; font-size:1
 .appearance-control-grid label>span { display:block; color:var(--text-muted); font-size:12px; font-weight:700; margin-bottom:5px; }
 @media(max-width:900px){.appearance-control-grid{grid-template-columns:repeat(2,minmax(145px,1fr))}}
 @media(max-width:580px){.appearance-control-grid{grid-template-columns:1fr}}
+
+
+/* Labeled form fields */
+.labeled-form-grid {
+  align-items: start;
+}
+
+.form-field {
+  display: block;
+  min-width: 0;
+}
+
+.form-field > span {
+  display: block;
+  margin: 0 0 5px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.form-field input,
+.form-field select,
+.form-field textarea {
+  margin: 0;
+}
+
+.form-field-full {
+  display: block;
+  margin-top: 10px;
+}
+
+.required-mark {
+  color: #ef4444;
+  font-weight: 800;
+}
+
+.evaluation-notes-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(220px, 1fr));
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.evaluation-notes-grid .form-field-full {
+  grid-column: 1 / -1;
+  margin-top: 0;
+}
+
+.evaluation-notes-grid textarea {
+  min-height: 100px;
+}
+
+@media (max-width: 760px) {
+  .evaluation-notes-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .evaluation-notes-grid .form-field-full {
+    grid-column: auto;
+  }
+}
