@@ -4,6 +4,54 @@
   <meta charset="UTF-8" />
   <title>Supervisor Command Center</title>
   <link rel="stylesheet" href="./styles.css" />
+
+  <style id="scc-critical-lock-styles">
+    body.app-is-locked { overflow: hidden !important; }
+    body.app-is-locked > .app-header,
+    body.app-is-locked > #container {
+      visibility: hidden !important;
+      pointer-events: none !important;
+      user-select: none !important;
+    }
+    #appLockOverlay.app-lock-overlay {
+      position: fixed !important;
+      inset: 0 !important;
+      z-index: 2147483647 !important;
+      display: grid !important;
+      place-items: center !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      padding: 24px !important;
+      overflow: auto !important;
+      background: radial-gradient(circle at top, rgba(37,99,235,.20), transparent 38%), linear-gradient(180deg,#020617 0%,#0f172a 100%) !important;
+    }
+    #appLockOverlay .app-lock-card {
+      width: min(440px, calc(100vw - 32px)) !important;
+      padding: 30px !important;
+      margin: auto !important;
+      background: #111827 !important;
+      border: 1px solid #334155 !important;
+      border-radius: 18px !important;
+      box-shadow: 0 24px 70px rgba(0,0,0,.5) !important;
+    }
+    #appLockOverlay .app-lock-emblem {
+      width: 62px !important; height: 62px !important;
+      display: grid !important; place-items: center !important;
+      margin: 0 auto 18px !important; border-radius: 16px !important;
+      background: #2563eb !important; color: #fff !important;
+      font-size: 17px !important; font-weight: 800 !important; letter-spacing: 1px !important;
+    }
+    #appLockOverlay h1 { margin: 0 !important; text-align: center !important; font-size: 26px !important; }
+    #appLockOverlay .app-lock-card > p { margin: 8px 0 24px !important; color: #9ca3af !important; text-align: center !important; line-height: 1.5 !important; }
+    #appLockOverlay label { display: block !important; margin-bottom: 6px !important; color: #dbeafe !important; font-size: 13px !important; font-weight: 700 !important; }
+    #appLockOverlay .app-lock-input-row { display: grid !important; grid-template-columns: minmax(0,1fr) auto !important; gap: 8px !important; align-items: center !important; }
+    #appLockOverlay input { width: 100% !important; min-width: 0 !important; margin: 0 !important; padding: 11px 12px !important; border: 1px solid #334155 !important; border-radius: 8px !important; background: #0b1220 !important; color: #f9fafb !important; }
+    #appLockOverlay .app-password-toggle { width: auto !important; min-width: 68px !important; margin: 0 !important; padding: 11px 12px !important; white-space: nowrap !important; }
+    #appLockOverlay .app-lock-error { min-height: 20px !important; margin: 9px 0 5px !important; color: #fca5a5 !important; font-size: 13px !important; }
+    #appLockOverlay .app-unlock-button { width: 100% !important; margin-top: 4px !important; padding: 11px 14px !important; }
+    #appLockOverlay .app-lock-note { margin-top: 18px !important; color: #64748b !important; text-align: center !important; font-size: 11px !important; }
+  </style>
+
 </head>
 <body>
   <header class="app-header">
