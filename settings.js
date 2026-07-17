@@ -2,7 +2,33 @@ const DEFAULT_APP_APPEARANCE = {
   appName: "Supervisor Command Center",
   departmentName: "Unified Police Department",
   appLogo: "",
-  showLogo: true
+  showLogo: true,
+  theme: "midnight",
+  accent: "blue",
+  fontSize: "medium",
+  density: "comfortable",
+  cardStyle: "rounded",
+  sidebarSize: "standard"
+};
+
+const APP_THEME_PRESETS = {
+  midnight: { label: "Midnight Blue", description: "Current dark night-shift theme.", colors: { bgMain: "#0f172a", bgPanel: "#020617", bgCard: "#111827", bgCardLight: "#1f2937", bgInput: "#0b1220", textMain: "#f9fafb", textMuted: "#9ca3af", border: "#334155" } },
+  police: { label: "Police Blue", description: "Dark blue panels with brighter blue surfaces.", colors: { bgMain: "#0b1f33", bgPanel: "#061321", bgCard: "#112a43", bgCardLight: "#173a5d", bgInput: "#0a1a2b", textMain: "#f4f9ff", textMuted: "#a9bfd2", border: "#315776" } },
+  slate: { label: "Slate Gray", description: "Neutral gray-blue appearance.", colors: { bgMain: "#17202a", bgPanel: "#0e151d", bgCard: "#202b36", bgCardLight: "#2a3744", bgInput: "#141d26", textMain: "#f5f7fa", textMuted: "#aeb8c3", border: "#465564" } },
+  carbon: { label: "Carbon Black", description: "Deep black CAD-style appearance.", colors: { bgMain: "#090b0f", bgPanel: "#030406", bgCard: "#111318", bgCardLight: "#1a1d23", bgInput: "#0b0d11", textMain: "#f7f7f8", textMuted: "#a5a7ad", border: "#343840" } },
+  emerald: { label: "Emerald", description: "Dark green-gray panels.", colors: { bgMain: "#0d1f1a", bgPanel: "#06120f", bgCard: "#132b24", bgCardLight: "#1a3a31", bgInput: "#0a1915", textMain: "#f2fbf7", textMuted: "#a5c0b5", border: "#31594a" } },
+  light: { label: "Light", description: "Bright daytime appearance.", colors: { bgMain: "#eef3f8", bgPanel: "#ffffff", bgCard: "#ffffff", bgCardLight: "#f5f8fb", bgInput: "#ffffff", textMain: "#17202a", textMuted: "#667482", border: "#cbd5df" } },
+  highContrast: { label: "High Contrast", description: "Maximum contrast.", colors: { bgMain: "#000000", bgPanel: "#000000", bgCard: "#080808", bgCardLight: "#111111", bgInput: "#000000", textMain: "#ffffff", textMuted: "#e5e5e5", border: "#ffffff" } }
+};
+
+const APP_ACCENT_PRESETS = {
+  blue: { label: "Blue", value: "#2563eb", hover: "#1d4ed8" },
+  cyan: { label: "Cyan", value: "#0891b2", hover: "#0e7490" },
+  green: { label: "Green", value: "#16885c", hover: "#116b49" },
+  purple: { label: "Purple", value: "#7c3aed", hover: "#6d28d9" },
+  orange: { label: "Orange", value: "#d97706", hover: "#b45309" },
+  red: { label: "Red", value: "#dc2626", hover: "#b91c1c" },
+  gold: { label: "Gold", value: "#b88900", hover: "#946f00" }
 };
 
 async function loadSettingsPage() {
@@ -16,49 +42,29 @@ async function loadSettingsPage() {
       </div>
     </div>
 
-    <section class="card">
-      <div class="branding-settings-header">
-        <div>
-          <h3>App Appearance</h3>
-          <p class="muted">Use one optional logo in the application header. Logos are not added to exported documents.</p>
-        </div>
+    <section class="card appearance-settings-card">
+      <div class="branding-settings-header"><div><h3>App Appearance</h3><p class="muted">Choose the theme, accent color, spacing, and application identity.</p></div></div>
+
+      <div class="appearance-section"><h4>Theme</h4><div class="appearance-theme-grid">
+        ${Object.entries(APP_THEME_PRESETS).map(([key, preset]) => `<label class="appearance-theme-option ${appearance.theme === key ? "selected" : ""}"><input type="radio" name="appearanceTheme" value="${key}" ${appearance.theme === key ? "checked" : ""}><span class="appearance-theme-preview theme-preview-${key}"><i></i><i></i><i></i></span><strong>${preset.label}</strong><small>${preset.description}</small></label>`).join("")}
+      </div></div>
+
+      <div class="appearance-section"><h4>Accent Color</h4><div class="appearance-accent-grid">
+        ${Object.entries(APP_ACCENT_PRESETS).map(([key, preset]) => `<label class="appearance-accent-option ${appearance.accent === key ? "selected" : ""}"><input type="radio" name="appearanceAccent" value="${key}" ${appearance.accent === key ? "checked" : ""}><span style="background:${preset.value}"></span>${preset.label}</label>`).join("")}
+      </div></div>
+
+      <div class="appearance-control-grid">
+        <label><span>Font Size</span><select id="appearanceFontSize"><option value="small" ${appearance.fontSize === "small" ? "selected" : ""}>Small</option><option value="medium" ${appearance.fontSize === "medium" ? "selected" : ""}>Medium</option><option value="large" ${appearance.fontSize === "large" ? "selected" : ""}>Large</option></select></label>
+        <label><span>Screen Density</span><select id="appearanceDensity"><option value="comfortable" ${appearance.density === "comfortable" ? "selected" : ""}>Comfortable</option><option value="compact" ${appearance.density === "compact" ? "selected" : ""}>Compact</option><option value="dense" ${appearance.density === "dense" ? "selected" : ""}>Information Dense</option></select></label>
+        <label><span>Card Style</span><select id="appearanceCardStyle"><option value="rounded" ${appearance.cardStyle === "rounded" ? "selected" : ""}>Rounded</option><option value="square" ${appearance.cardStyle === "square" ? "selected" : ""}>Square</option><option value="flat" ${appearance.cardStyle === "flat" ? "selected" : ""}>Flat</option></select></label>
+        <label><span>Sidebar Size</span><select id="appearanceSidebarSize"><option value="standard" ${appearance.sidebarSize === "standard" ? "selected" : ""}>Standard</option><option value="compact" ${appearance.sidebarSize === "compact" ? "selected" : ""}>Compact</option></select></label>
       </div>
 
-      <div class="form-grid">
-        <input id="appearanceAppName" value="${escapeSettingsHtml(appearance.appName)}" placeholder="App name" />
-        <input id="appearanceDepartmentName" value="${escapeSettingsHtml(appearance.departmentName)}" placeholder="Department or division" />
-      </div>
-
-      <div class="app-logo-settings">
-        <div class="app-logo-preview" id="appLogoPreview">
-          ${appearance.appLogo
-            ? `<img src="${appearance.appLogo}" alt="App logo preview" />`
-            : `<div class="app-logo-fallback">SCC</div>`}
-        </div>
-
-        <div class="app-logo-controls">
-          <strong>App Logo</strong>
-          <p class="muted">PNG, JPG, or WebP. The image is stored locally in this browser.</p>
-          <input id="appearanceAppLogo" type="file" accept="image/png,image/jpeg,image/webp" />
-          <input id="appearanceAppLogoData" type="hidden" value="${appearance.appLogo ? escapeSettingsHtml(appearance.appLogo) : ""}" />
-          <button type="button" class="secondary-btn" onclick="removeAppLogo()">Remove Logo</button>
-        </div>
-      </div>
-
-      <div class="checkbox-grid">
-        <label>
-          <input id="appearanceShowLogo" type="checkbox" ${appearance.showLogo ? "checked" : ""} />
-          Show logo in application header
-        </label>
-      </div>
-
-      <div class="quick-actions">
-        <button type="button" onclick="saveAppAppearance()">Save Appearance</button>
-        <button type="button" class="secondary-btn" onclick="resetAppAppearance()">Reset Appearance</button>
-      </div>
+      <div class="appearance-section"><h4>Application Identity</h4><div class="form-grid"><input id="appearanceAppName" value="${escapeSettingsHtml(appearance.appName)}" placeholder="App name"><input id="appearanceDepartmentName" value="${escapeSettingsHtml(appearance.departmentName)}" placeholder="Department or division"></div>
+      <div class="app-logo-settings"><div class="app-logo-preview" id="appLogoPreview">${appearance.appLogo ? `<img src="${appearance.appLogo}" alt="App logo preview">` : `<div class="app-logo-fallback">SCC</div>`}</div><div class="app-logo-controls"><strong>App Logo</strong><p class="muted">PNG, JPG, or WebP. Stored locally.</p><input id="appearanceAppLogo" type="file" accept="image/png,image/jpeg,image/webp"><input id="appearanceAppLogoData" type="hidden" value="${appearance.appLogo ? escapeSettingsHtml(appearance.appLogo) : ""}"><button type="button" class="secondary-btn" onclick="removeAppLogo()">Remove Logo</button></div></div>
+      <div class="checkbox-grid"><label><input id="appearanceShowLogo" type="checkbox" ${appearance.showLogo ? "checked" : ""}> Show logo in application header</label></div></div>
+      <div class="quick-actions"><button type="button" onclick="saveAppAppearance()">Save Appearance</button><button type="button" class="secondary-btn" onclick="previewAppAppearance()">Preview Changes</button><button type="button" class="secondary-btn" onclick="resetAppAppearance()">Reset Appearance</button></div>
     </section>
-
-    <div id="securitySettingsMount"></div>
 
     <section class="card">
       <h3>Export Full Backup</h3>
@@ -101,7 +107,8 @@ async function loadSettingsPage() {
 
   loadEmployeeExportDropdown();
   wireAppLogoInput();
-  renderSecuritySettingsSection();
+  wireAppearanceOptionCards();
+  if (typeof renderSecuritySettingsSection === "function") renderSecuritySettingsSection();
 }
 
 function wireAppLogoInput() {
@@ -137,21 +144,38 @@ function removeAppLogo() {
 }
 
 async function saveAppAppearance() {
-  const appearance = {
-    appName: document.getElementById("appearanceAppName").value.trim() || DEFAULT_APP_APPEARANCE.appName,
-    departmentName: document.getElementById("appearanceDepartmentName").value.trim(),
-    appLogo: document.getElementById("appearanceAppLogoData").value,
-    showLogo: document.getElementById("appearanceShowLogo").checked,
-    updatedAt: new Date().toISOString()
-  };
-
+  const appearance = collectAppearanceFormValues();
   const store = await getSettingsStore();
   store.appAppearance = appearance;
   store.updatedAt = new Date().toISOString();
   await updateRecord("employees", store);
-
   applyAppAppearance(appearance);
   alert("App appearance saved.");
+}
+
+function collectAppearanceFormValues() {
+  return {
+    appName: document.getElementById("appearanceAppName")?.value.trim() || DEFAULT_APP_APPEARANCE.appName,
+    departmentName: document.getElementById("appearanceDepartmentName")?.value.trim() || DEFAULT_APP_APPEARANCE.departmentName,
+    appLogo: document.getElementById("appearanceAppLogoData")?.value || "",
+    showLogo: document.getElementById("appearanceShowLogo")?.checked !== false,
+    theme: document.querySelector('input[name="appearanceTheme"]:checked')?.value || DEFAULT_APP_APPEARANCE.theme,
+    accent: document.querySelector('input[name="appearanceAccent"]:checked')?.value || DEFAULT_APP_APPEARANCE.accent,
+    fontSize: document.getElementById("appearanceFontSize")?.value || DEFAULT_APP_APPEARANCE.fontSize,
+    density: document.getElementById("appearanceDensity")?.value || DEFAULT_APP_APPEARANCE.density,
+    cardStyle: document.getElementById("appearanceCardStyle")?.value || DEFAULT_APP_APPEARANCE.cardStyle,
+    sidebarSize: document.getElementById("appearanceSidebarSize")?.value || DEFAULT_APP_APPEARANCE.sidebarSize,
+    updatedAt: new Date().toISOString()
+  };
+}
+function previewAppAppearance() { applyAppAppearance(collectAppearanceFormValues()); }
+function wireAppearanceOptionCards() {
+  document.querySelectorAll(".appearance-theme-option, .appearance-accent-option").forEach(option => option.addEventListener("click", () => {
+    const selector = option.classList.contains("appearance-theme-option") ? ".appearance-theme-option" : ".appearance-accent-option";
+    document.querySelectorAll(selector).forEach(item => item.classList.remove("selected"));
+    option.classList.add("selected");
+  }));
+  document.querySelectorAll('input[name="appearanceTheme"], input[name="appearanceAccent"], #appearanceFontSize, #appearanceDensity, #appearanceCardStyle, #appearanceSidebarSize').forEach(control => control.addEventListener("change", previewAppAppearance));
 }
 
 async function resetAppAppearance() {
@@ -206,26 +230,38 @@ async function applySavedDepartmentBranding() {
   return applySavedAppAppearance();
 }
 
-function applyAppAppearance(appearance) {
+function applyAppAppearance(appearance = {}) {
+  const resolved = { ...DEFAULT_APP_APPEARANCE, ...appearance };
+  const theme = APP_THEME_PRESETS[resolved.theme] || APP_THEME_PRESETS.midnight;
+  const accent = APP_ACCENT_PRESETS[resolved.accent] || APP_ACCENT_PRESETS.blue;
+  const root = document.documentElement;
+  root.style.setProperty("--bg-main", theme.colors.bgMain);
+  root.style.setProperty("--bg-panel", theme.colors.bgPanel);
+  root.style.setProperty("--bg-card", theme.colors.bgCard);
+  root.style.setProperty("--bg-card-light", theme.colors.bgCardLight);
+  root.style.setProperty("--bg-input", theme.colors.bgInput);
+  root.style.setProperty("--text-main", theme.colors.textMain);
+  root.style.setProperty("--text-muted", theme.colors.textMuted);
+  root.style.setProperty("--border", theme.colors.border);
+  root.style.setProperty("--accent", accent.value);
+  root.style.setProperty("--accent-hover", accent.hover);
+  document.body.dataset.theme = resolved.theme;
+  document.body.dataset.fontSize = resolved.fontSize;
+  document.body.dataset.density = resolved.density;
+  document.body.dataset.cardStyle = resolved.cardStyle;
+  document.body.dataset.sidebarSize = resolved.sidebarSize;
   const header = document.querySelector(".app-header");
   if (!header) return;
-
   document.getElementById("departmentAppBrand")?.remove();
-
   const title = header.querySelector("h1");
   const subtitle = header.querySelector("p");
-
-  if (title) title.textContent = appearance.appName || DEFAULT_APP_APPEARANCE.appName;
-  if (subtitle) {
-    subtitle.textContent = appearance.departmentName || "Local-only personnel, supervision, and shift management";
-  }
-
-  if (!appearance.showLogo || !appearance.appLogo) return;
-
+  if (title) title.textContent = resolved.appName || DEFAULT_APP_APPEARANCE.appName;
+  if (subtitle) subtitle.textContent = resolved.departmentName || "Local-only personnel, supervision, and shift management";
+  if (!resolved.showLogo || !resolved.appLogo) return;
   const brand = document.createElement("div");
   brand.id = "departmentAppBrand";
   brand.className = "department-app-brand app-logo-only";
-  brand.innerHTML = `<img src="${appearance.appLogo}" alt="App logo" />`;
+  brand.innerHTML = `<img src="${resolved.appLogo}" alt="App logo">`;
   header.insertBefore(brand, header.firstChild);
 }
 
