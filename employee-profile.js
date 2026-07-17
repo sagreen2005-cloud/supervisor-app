@@ -2,58 +2,93 @@ async function openEmployeeProfile(id) {
   selectedEmployeeId = id;
 
   const employees = await getAllRecords("employees");
-  const employee = employees.find(e => e.id === id);
+  const employee = employees.find(item => item.id === id);
 
   if (!employee) {
     alert("Employee record could not be found.");
-    loadEmployeesPage();
+    await loadEmployeesPage();
     return;
   }
 
-  if (!employee.equipment) employee.equipment = [];
-  if (!employee.training) employee.training = [];
-  if (!employee.schedule) employee.schedule = [];
-  if (!employee.activity) employee.activity = [];
-  if (!employee.performance) employee.performance = [];
-  if (!employee.reportReviews) employee.reportReviews = [];
-  if (!employee.evaluations) employee.evaluations = [];
-  if (!employee.files) employee.files = [];
+  const arrays = [
+    "training",
+    "schedule",
+    "activity",
+    "performance",
+    "reportReviews",
+    "evaluations",
+    "files"
+  ];
 
-  await updateRecord("employees", employee);
+  let changed = false;
+  arrays.forEach(key => {
+    if (!Array.isArray(employee[key])) {
+      employee[key] = [];
+      changed = true;
+    }
+  });
+
+  if (changed) {
+    employee.updatedAt = new Date().toISOString();
+    await updateRecord("employees", employee);
+  }
 
   document.getElementById("content").innerHTML = `
-    <button onclick="loadEmployeesPage()">← Back to Employees</button>
+    <div class="employee-360-back-row">
+      <button class="secondary-btn" type="button" onclick="loadEmployeesPage()">← Back to Employees</button>
+    </div>
 
-    <section class="card employee-profile-header">
-      <div class="employee-profile-heading">
+    <section class="card employee-360-hero">
+      <div class="employee-360-identity">
         <div class="employee-profile-avatar">${getEmployeeInitials(employee)}</div>
-        <div>
-          <h2>${escapeEmployeeProfileHtml(employee.rank || "")} ${escapeEmployeeProfileHtml(employee.firstName)} ${escapeEmployeeProfileHtml(employee.lastName)}</h2>
-          <p class="muted">Badge: ${escapeEmployeeProfileHtml(employee.badge || "N/A")} | ${escapeEmployeeProfileHtml(employee.assignment || "No assignment listed")}</p>
+
+        <div class="employee-360-name-block">
+          <span class="employee-360-eyebrow">Employee 360</span>
+          <h2>${escapeEmployeeProfileHtml(employee.rank || "")} ${escapeEmployeeProfileHtml(employee.firstName || "")} ${escapeEmployeeProfileHtml(employee.lastName || "")}</h2>
+          <p>
+            Badge ${escapeEmployeeProfileHtml(employee.badge || "N/A")}
+            <span aria-hidden="true">•</span>
+            ${escapeEmployeeProfileHtml(employee.assignment || "No assignment listed")}
+          </p>
         </div>
       </div>
 
-      <div class="profile-tabs">
-        <button data-employee-tab="overview" onclick="showEmployeeTab('overview')">360 Summary</button>
-        <button data-employee-tab="timeline" onclick="showEmployeeTab('timeline')">Supervisor Timeline</button>
-        <button data-employee-tab="edit" onclick="showEmployeeTab('edit')">Edit Employee</button>
-        <button data-employee-tab="notes" onclick="showEmployeeTab('notes')">Add Note</button>
-        <button data-employee-tab="equipment" onclick="showEmployeeTab('equipment')">Equipment</button>
-        <button data-employee-tab="training" onclick="showEmployeeTab('training')">Training</button>
-        <button data-employee-tab="schedule" onclick="showEmployeeTab('schedule')">Schedule</button>
-        <button data-employee-tab="files" onclick="showEmployeeTab('files')">Files</button>
+      <div class="employee-360-quick-actions">
+        <button type="button" onclick="showEmployeeTab('notes')">Add Timeline Entry</button>
+        <button class="secondary-btn" type="button" onclick="showEmployeeTab('timeline')">Open Timeline</button>
+        <button class="secondary-btn" type="button" onclick="showEmployeeTab('edit')">Edit Employee</button>
+      </div>
+
+      <div class="employee-360-contact-strip">
+        ${renderEmployee360Fact("Phone", employee.phone || "N/A")}
+        ${renderEmployee360Fact("Email", employee.email || "N/A")}
+        ${renderEmployee360Fact("Hire Date", formatEmployeeProfileDate(employee.hireDate))}
+        ${renderEmployee360Fact("Service", getEmployeeServiceLength(employee.hireDate))}
       </div>
     </section>
 
-    <div id="employeeTabContent"></div>
+    <div class="employee-360-shell">
+      <aside class="card employee-360-navigation">
+        <div class="employee-360-navigation-heading">Employee Record</div>
+        <button data-employee-tab="overview" onclick="showEmployeeTab('overview')">Overview</button>
+        <button data-employee-tab="timeline" onclick="showEmployeeTab('timeline')">Supervisor Timeline</button>
+        <button data-employee-tab="notes" onclick="showEmployeeTab('notes')">Add Note</button>
+        <button data-employee-tab="training" onclick="showEmployeeTab('training')">Training</button>
+        <button data-employee-tab="schedule" onclick="showEmployeeTab('schedule')">Schedule</button>
+        <button data-employee-tab="files" onclick="showEmployeeTab('files')">Files</button>
+        <button data-employee-tab="edit" onclick="showEmployeeTab('edit')">Edit Employee</button>
+      </aside>
+
+      <main id="employeeTabContent" class="employee-360-content"></main>
+    </div>
   `;
 
-  showEmployeeTab("overview");
+  await showEmployeeTab("timeline");
 }
 
 async function showEmployeeTab(tab) {
   const employees = await getAllRecords("employees");
-  const employee = employees.find(e => e.id === selectedEmployeeId);
+  const employee = employees.find(item => item.id === selectedEmployeeId);
 
   if (!employee) return;
 
@@ -61,160 +96,141 @@ async function showEmployeeTab(tab) {
     button.classList.toggle("active", button.dataset.employeeTab === tab);
   });
 
-  if (tab === "overview") loadEmployee360(employee);
-  if (tab === "edit") loadEditEmployeeTab(employee);
-  if (tab === "timeline") loadTimelineTab(employee);
-  if (tab === "notes") loadAddNoteTab();
-  if (tab === "equipment") loadEquipmentTab(employee);
-  if (tab === "training") loadTrainingTab(employee);
-  if (tab === "schedule") loadScheduleTab(employee);
-  if (tab === "files") loadEmployeeFilesTab(employee);
+  const content = document.getElementById("employeeTabContent");
+  if (!content) return;
+
+  try {
+    if (tab === "overview") {
+      loadEmployee360(employee);
+      return;
+    }
+
+    if (tab === "timeline") {
+      if (typeof loadTimelineTab !== "function") {
+        throw new Error("Timeline functions are not loaded. Confirm employee-notes.js is included after employee-profile.js.");
+      }
+      loadTimelineTab(employee);
+      return;
+    }
+
+    if (tab === "notes") {
+      loadAddNoteTab();
+      return;
+    }
+
+    if (tab === "training") {
+      loadTrainingTab(employee);
+      return;
+    }
+
+    if (tab === "schedule") {
+      loadScheduleTab(employee);
+      return;
+    }
+
+    if (tab === "files") {
+      loadEmployeeFilesTab(employee);
+      return;
+    }
+
+    if (tab === "edit") {
+      loadEditEmployeeTab(employee);
+      return;
+    }
+
+    loadEmployee360(employee);
+  } catch (error) {
+    console.error("Employee 360 tab error:", error);
+    content.innerHTML = `
+      <section class="card">
+        <h3>Unable to Load This Section</h3>
+        <p class="muted">${escapeEmployeeProfileHtml(error.message || "An unexpected error occurred.")}</p>
+      </section>
+    `;
+  }
 }
 
 function loadEmployee360(employee) {
-  const today = new Date();
-  const thirtyDaysFromNow = new Date();
-  thirtyDaysFromNow.setDate(today.getDate() + 30);
-
-  const activity = employee.activity || [];
-  const equipment = employee.equipment || [];
-  const training = employee.training || [];
-  const schedule = employee.schedule || [];
-  const performance = employee.performance || [];
-  const reportReviews = employee.reportReviews || [];
-  const evaluations = employee.evaluations || [];
-  const combinedTimeline = typeof buildEmployeeTimelineEntries === "function"
+  const entries = typeof buildEmployeeTimelineEntries === "function"
     ? buildEmployeeTimelineEntries(employee)
-    : activity;
+    : (employee.activity || []);
 
-  let expiredTraining = 0;
-  let trainingExpiringSoon = 0;
+  const performance = employee.performance || [];
+  const reports = employee.reportReviews || [];
+  const evaluations = employee.evaluations || [];
+  const training = employee.training || [];
+  const files = employee.files || [];
+  const schedule = employee.schedule || [];
 
-  training.forEach(item => {
-    if (!item.expiresDate) return;
+  const positive = entries.filter(item => item.category === "positive").length;
+  const coaching = entries.filter(item => item.category === "coaching").length;
+  const pendingEvaluations = evaluations.filter(item => !/completed/i.test(item.status || "")).length;
+  const expiringTraining = countEmployeeTrainingDue(training, 45);
 
-    const expires = new Date(item.expiresDate);
-
-    if (expires < today) {
-      expiredTraining++;
-    } else if (expires <= thirtyDaysFromNow) {
-      trainingExpiringSoon++;
-    }
-  });
-
-  const returnedReports = reportReviews.filter(r => r.returnedForCorrection === "Yes").length;
-  const excellentReports = reportReviews.filter(r => r.rating === "Excellent").length;
-  const needsImprovement = performance.filter(p => p.rating === "1 - Needs Improvement").length;
-  const commendations = combinedTimeline.filter(item => item.category === "positive").length;
-  const coaching = combinedTimeline.filter(item => item.category === "coaching").length;
-
-  const recentActivity = combinedTimeline
-    .slice()
-    .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))
-    .slice(0, 5);
+  const recent = entries.slice(0, 6);
 
   document.getElementById("employeeTabContent").innerHTML = `
-    <section class="card">
-      <div class="employee-360-summary-header">
-        <div>
-          <h3>Employee 360 Summary</h3>
-          <p class="muted">Current employee information and a preview of the supervisor timeline.</p>
-        </div>
-        <button type="button" onclick="showEmployeeTab('timeline')">View Full Timeline</button>
-      </div>
-
-      <div class="employee-details">
-        <div><span>Phone</span>${escapeEmployeeProfileHtml(employee.phone || "N/A")}</div>
-        <div><span>Email</span>${escapeEmployeeProfileHtml(employee.email || "N/A")}</div>
-        <div><span>Hire Date</span>${escapeEmployeeProfileHtml(employee.hireDate || "N/A")}</div>
-        <div><span>Assignment</span>${escapeEmployeeProfileHtml(employee.assignment || "N/A")}</div>
-      </div>
-
-      <p class="employee-note">${escapeEmployeeProfileHtml(employee.notes || "No general notes entered.")}</p>
+    <section class="employee-360-kpi-grid">
+      ${renderEmployee360Kpi("Timeline", entries.length, "timeline")}
+      ${renderEmployee360Kpi("Positive", positive, "timeline", "positive")}
+      ${renderEmployee360Kpi("Coaching", coaching, "timeline", coaching ? "warning" : "")}
+      ${renderEmployee360Kpi("Performance", performance.length, "timeline")}
+      ${renderEmployee360Kpi("Report Reviews", reports.length, "timeline")}
+      ${renderEmployee360Kpi("Evaluations Open", pendingEvaluations, "timeline", pendingEvaluations ? "warning" : "")}
+      ${renderEmployee360Kpi("Training", training.length, "training")}
+      ${renderEmployee360Kpi("Training Due", expiringTraining, "training", expiringTraining ? "warning" : "")}
+      ${renderEmployee360Kpi("Files", files.length, "files")}
+      ${renderEmployee360Kpi("Schedule", schedule.length, "schedule")}
     </section>
 
-    <div class="dashboard-grid employee-360-stat-grid">
-      <button class="stat-card employee-360-stat-link" onclick="showEmployeeTab('timeline')">
-        <div class="number">${combinedTimeline.length}</div>
-        <div class="label">Timeline Events</div>
-      </button>
+    <div class="employee-360-overview-grid">
+      <section class="card">
+        <div class="employee-360-section-header">
+          <div>
+            <h3>Supervisor Snapshot</h3>
+            <p class="muted">Current indicators based on records already stored for this employee.</p>
+          </div>
+        </div>
 
-      <button class="stat-card employee-360-stat-link" onclick="showEmployeeTab('timeline')">
-        <div class="number">${performance.length}</div>
-        <div class="label">Performance Entries</div>
-      </button>
+        <div class="employee-360-snapshot-list">
+          ${renderEmployeeSnapshotLine("Positive timeline entries", positive)}
+          ${renderEmployeeSnapshotLine("Coaching or follow-up entries", coaching)}
+          ${renderEmployeeSnapshotLine("Report reviews", reports.length)}
+          ${renderEmployeeSnapshotLine("Open evaluations", pendingEvaluations)}
+          ${renderEmployeeSnapshotLine("Training due within 45 days", expiringTraining)}
+          ${renderEmployeeSnapshotLine("Files on record", files.length)}
+        </div>
+      </section>
 
-      <button class="stat-card employee-360-stat-link" onclick="showEmployeeTab('timeline')">
-        <div class="number">${reportReviews.length}</div>
-        <div class="label">Report Reviews</div>
-      </button>
+      <section class="card">
+        <div class="employee-360-section-header">
+          <div>
+            <h3>General Notes</h3>
+            <p class="muted">Quick-reference employee information.</p>
+          </div>
+          <button class="secondary-btn" onclick="showEmployeeTab('edit')">Edit</button>
+        </div>
 
-      <button class="stat-card employee-360-stat-link" onclick="showEmployeeTab('timeline')">
-        <div class="number">${commendations}</div>
-        <div class="label">Positive Entries</div>
-      </button>
-
-      <button class="stat-card employee-360-stat-link warning-card" onclick="showEmployeeTab('timeline')">
-        <div class="number">${coaching + returnedReports + needsImprovement}</div>
-        <div class="label">Coaching / Follow-up</div>
-      </button>
-
-      <button class="stat-card employee-360-stat-link" onclick="showEmployeeTab('timeline')">
-        <div class="number">${evaluations.length}</div>
-        <div class="label">Evaluations</div>
-      </button>
-
-      <button class="stat-card employee-360-stat-link" onclick="showEmployeeTab('training')">
-        <div class="number">${training.length}</div>
-        <div class="label">Training Records</div>
-      </button>
-
-      <button class="stat-card employee-360-stat-link warning-card" onclick="showEmployeeTab('training')">
-        <div class="number">${trainingExpiringSoon}</div>
-        <div class="label">Training Expiring Soon</div>
-      </button>
-
-      <button class="stat-card employee-360-stat-link danger-stat" onclick="showEmployeeTab('training')">
-        <div class="number">${expiredTraining}</div>
-        <div class="label">Expired Training</div>
-      </button>
-
-      <button class="stat-card employee-360-stat-link" onclick="showEmployeeTab('schedule')">
-        <div class="number">${schedule.length}</div>
-        <div class="label">Schedule Entries</div>
-      </button>
-
-      <button class="stat-card employee-360-stat-link" onclick="showEmployeeTab('equipment')">
-        <div class="number">${equipment.length}</div>
-        <div class="label">Equipment Items</div>
-      </button>
-
-      <button class="stat-card employee-360-stat-link" onclick="showEmployeeTab('timeline')">
-        <div class="number">${excellentReports}</div>
-        <div class="label">Excellent Reports</div>
-      </button>
+        <div class="employee-note">${escapeEmployeeProfileHtml(employee.notes || "No general notes entered.")}</div>
+      </section>
     </div>
 
     <section class="card">
-      <div class="employee-360-summary-header">
+      <div class="employee-360-section-header">
         <div>
           <h3>Recent Supervisor Timeline</h3>
-          <p class="muted">Most recent activity from notes, performance, reports, training, evaluations, schedule, and files.</p>
+          <p class="muted">The newest activity from notes, reports, evaluations, training, schedule, and files.</p>
         </div>
-        <button class="secondary-btn" type="button" onclick="showEmployeeTab('timeline')">Open Timeline</button>
+        <button class="secondary-btn" onclick="showEmployeeTab('timeline')">View Full Timeline</button>
       </div>
 
-      ${
-        recentActivity.length === 0
-          ? `<p class="muted">No timeline activity yet.</p>`
-          : recentActivity.map(item => `
-            <button class="employee-360-recent-item timeline-item" onclick="showEmployeeTab('timeline')">
-              <strong>${escapeEmployeeProfileHtml(item.title || item.type || "Activity")}</strong>
-              <span>${item.date ? new Date(item.date).toLocaleString() : "No date"}</span>
-              <p>${escapeEmployeeProfileHtml(item.note || item.details || "")}</p>
-            </button>
-          `).join("")
-      }
+      <div class="employee-360-recent-list">
+        ${
+          recent.length
+            ? recent.map(renderEmployee360RecentEntry).join("")
+            : `<p class="muted">No timeline activity has been documented.</p>`
+        }
+      </div>
     </section>
   `;
 }
@@ -222,32 +238,53 @@ function loadEmployee360(employee) {
 function loadEditEmployeeTab(employee) {
   document.getElementById("employeeTabContent").innerHTML = `
     <section class="card">
-      <h3>Edit Employee</h3>
-
-      <div class="form-grid">
-        <input id="editFirstName" placeholder="First Name" value="${escapeEmployeeProfileHtml(employee.firstName || "")}" />
-        <input id="editLastName" placeholder="Last Name" value="${escapeEmployeeProfileHtml(employee.lastName || "")}" />
-        <input id="editBadge" placeholder="Badge Number" value="${escapeEmployeeProfileHtml(employee.badge || "")}" />
-        <input id="editRank" placeholder="Rank" value="${escapeEmployeeProfileHtml(employee.rank || "")}" />
-        <input id="editPhone" placeholder="Phone Number" value="${escapeEmployeeProfileHtml(employee.phone || "")}" />
-        <input id="editEmail" placeholder="Email" value="${escapeEmployeeProfileHtml(employee.email || "")}" />
-        <input id="editAssignment" placeholder="Assignment / Shift" value="${escapeEmployeeProfileHtml(employee.assignment || "")}" />
-        <input id="editHireDate" type="date" value="${escapeEmployeeProfileHtml(employee.hireDate || "")}" />
+      <div class="employee-360-section-header">
+        <div>
+          <h3>Edit Employee</h3>
+          <p class="muted">Update the employee's core profile information.</p>
+        </div>
       </div>
 
-      <textarea id="editEmployeeNotes" placeholder="General notes / quick reference information">${escapeEmployeeProfileHtml(employee.notes || "")}</textarea>
+      <div class="form-grid labeled-form-grid">
+        ${renderEmployeeEditField("First Name", "editFirstName", employee.firstName, true)}
+        ${renderEmployeeEditField("Last Name", "editLastName", employee.lastName, true)}
+        ${renderEmployeeEditField("Badge Number", "editBadge", employee.badge)}
+        ${renderEmployeeEditField("Rank", "editRank", employee.rank)}
+        ${renderEmployeeEditField("Phone Number", "editPhone", employee.phone, false, "tel")}
+        ${renderEmployeeEditField("Email", "editEmail", employee.email, false, "email")}
+        ${renderEmployeeEditField("Assignment / Shift", "editAssignment", employee.assignment)}
+        ${renderEmployeeEditField("Hire Date", "editHireDate", employee.hireDate, false, "date")}
+      </div>
 
-      <button onclick="saveEmployeeEdits()">Save Changes</button>
+      <label class="form-field form-field-full">
+        <span>General Notes</span>
+        <textarea id="editEmployeeNotes">${escapeEmployeeProfileHtml(employee.notes || "")}</textarea>
+      </label>
+
+      <div class="employee-360-form-actions">
+        <button type="button" onclick="saveEmployeeProfile()">Save Changes</button>
+        <button class="secondary-btn" type="button" onclick="showEmployeeTab('overview')">Cancel</button>
+      </div>
     </section>
   `;
 }
 
-async function saveEmployeeEdits() {
+async function saveEmployeeProfile() {
   const employees = await getAllRecords("employees");
-  const employee = employees.find(e => e.id === selectedEmployeeId);
+  const employee = employees.find(item => item.id === selectedEmployeeId);
 
-  employee.firstName = document.getElementById("editFirstName").value.trim();
-  employee.lastName = document.getElementById("editLastName").value.trim();
+  if (!employee) return;
+
+  const firstName = document.getElementById("editFirstName").value.trim();
+  const lastName = document.getElementById("editLastName").value.trim();
+
+  if (!firstName || !lastName) {
+    alert("First and last name are required.");
+    return;
+  }
+
+  employee.firstName = firstName;
+  employee.lastName = lastName;
   employee.badge = document.getElementById("editBadge").value.trim();
   employee.rank = document.getElementById("editRank").value.trim();
   employee.phone = document.getElementById("editPhone").value.trim();
@@ -257,19 +294,110 @@ async function saveEmployeeEdits() {
   employee.notes = document.getElementById("editEmployeeNotes").value.trim();
   employee.updatedAt = new Date().toISOString();
 
-  if (!employee.firstName || !employee.lastName) {
-    alert("First and last name are required.");
-    return;
-  }
-
   await updateRecord("employees", employee);
   await openEmployeeProfile(employee.id);
+  await showEmployeeTab("overview");
+}
+
+function renderEmployeeEditField(label, id, value = "", required = false, type = "text") {
+  return `
+    <label class="form-field">
+      <span>${escapeEmployeeProfileHtml(label)}${required ? ' <strong class="required-mark">*</strong>' : ""}</span>
+      <input id="${id}" type="${type}" value="${escapeEmployeeProfileHtml(value || "")}" />
+    </label>
+  `;
+}
+
+function renderEmployee360Fact(label, value) {
+  return `
+    <div>
+      <span>${escapeEmployeeProfileHtml(label)}</span>
+      <strong>${escapeEmployeeProfileHtml(value)}</strong>
+    </div>
+  `;
+}
+
+function renderEmployee360Kpi(label, value, tab, state = "") {
+  return `
+    <button class="employee-360-kpi ${state}" type="button" onclick="showEmployeeTab('${tab}')">
+      <strong>${Number(value) || 0}</strong>
+      <span>${escapeEmployeeProfileHtml(label)}</span>
+    </button>
+  `;
+}
+
+function renderEmployeeSnapshotLine(label, value) {
+  return `
+    <div class="employee-360-snapshot-line">
+      <span>${escapeEmployeeProfileHtml(label)}</span>
+      <strong>${escapeEmployeeProfileHtml(String(value))}</strong>
+    </div>
+  `;
+}
+
+function renderEmployee360RecentEntry(item) {
+  return `
+    <button class="employee-360-recent-entry" type="button" onclick="showEmployeeTab('timeline')">
+      <div>
+        <strong>${escapeEmployeeProfileHtml(item.title || item.type || "Timeline Entry")}</strong>
+        <span>${escapeEmployeeProfileHtml(item.type || item.source || "Employee record")}</span>
+      </div>
+      <time>${formatEmployeeProfileDateTime(item.date)}</time>
+    </button>
+  `;
+}
+
+function countEmployeeTrainingDue(training, withinDays) {
+  const now = new Date();
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() + withinDays);
+
+  return training.filter(item => {
+    if (!item.expiresDate) return false;
+    const date = new Date(`${item.expiresDate}T23:59:59`);
+    return !Number.isNaN(date.getTime()) && date <= cutoff;
+  }).length;
 }
 
 function getEmployeeInitials(employee) {
   const first = String(employee.firstName || "").trim().charAt(0);
   const last = String(employee.lastName || "").trim().charAt(0);
-  return escapeEmployeeProfileHtml(`${first}${last}`.toUpperCase() || "--");
+  return escapeEmployeeProfileHtml(`${first}${last}`.toUpperCase() || "E");
+}
+
+function getEmployeeServiceLength(hireDate) {
+  if (!hireDate) return "N/A";
+
+  const start = new Date(`${hireDate}T00:00:00`);
+  if (Number.isNaN(start.getTime())) return "N/A";
+
+  const now = new Date();
+  let years = now.getFullYear() - start.getFullYear();
+  let months = now.getMonth() - start.getMonth();
+
+  if (now.getDate() < start.getDate()) months -= 1;
+  if (months < 0) {
+    years -= 1;
+    months += 12;
+  }
+
+  if (years < 0) return "N/A";
+  if (years === 0) return `${Math.max(0, months)} month${months === 1 ? "" : "s"}`;
+  return `${years} year${years === 1 ? "" : "s"}, ${Math.max(0, months)} month${months === 1 ? "" : "s"}`;
+}
+
+function formatEmployeeProfileDate(value) {
+  if (!value) return "N/A";
+  const date = new Date(`${value}T00:00:00`);
+  return Number.isNaN(date.getTime())
+    ? escapeEmployeeProfileHtml(value)
+    : date.toLocaleDateString();
+}
+
+function formatEmployeeProfileDateTime(value) {
+  if (!value) return "No date";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "No date" : date.toLocaleString();
 }
 
 function escapeEmployeeProfileHtml(value) {
